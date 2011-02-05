@@ -150,7 +150,8 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource
 
     static IndexProviderStore newIndexStore( String dbStoreDir )
     {
-        return new IndexProviderStore( getStoreDir( dbStoreDir ) + "/store.db" );
+        return new IndexProviderStore( new File( getStoreDir( dbStoreDir )
+                                                 + "/store.db" ) );
     }
 
     @Override
@@ -314,7 +315,8 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource
         long[] ids = ArrayUtil.include( existingIds, entityIds );
         try
         {
-            db.put( null, new DatabaseEntry( indexKey), new DatabaseEntry( ArrayUtil.toBytes( ids )) );
+            db.put( null, new DatabaseEntry( indexKey ), new DatabaseEntry(
+                    ArrayUtil.toBytes( ids ) ) );
         }
         catch ( DatabaseException e )
         {
@@ -328,9 +330,11 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource
         try
         {
             DatabaseEntry value = new DatabaseEntry();
-            db.get( null, new DatabaseEntry(key), value,LockMode.READ_UNCOMMITTED );
-            
-            return value.getData() != null ? ArrayUtil.toLongArray( value.getData() ) : new long[0];
+            db.get( null, new DatabaseEntry( key ), value,
+                    LockMode.READ_UNCOMMITTED );
+
+            return value.getData() != null ? ArrayUtil.toLongArray( value.getData() )
+                    : new long[0];
         }
         catch ( Exception e )
         {
@@ -338,32 +342,32 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource
         }
     }
 
-    public void removeEntry( Database db, IndexIdentifier identifier, long[] entityIds, String key,
-            String value )
+    public void removeEntry( Database db, IndexIdentifier identifier,
+            long[] entityIds, String key, String value )
     {
-//        byte[] indexKey = indexKey( key, value );
-//        long[] existingIds = getExistingIds( db, indexKey );
-//        long[] ids = ArrayUtil.exclude( existingIds, entityIds );
-//        if ( ids.length == 0 )
-//        {
-//            batch.addDelete( 0, indexKey );
-//        }
-//        else
-//        {
-//            batch.addInsert( 0, indexKey, ArrayUtil.toBytes( ids ) );
-//        }
+        // byte[] indexKey = indexKey( key, value );
+        // long[] existingIds = getExistingIds( db, indexKey );
+        // long[] ids = ArrayUtil.exclude( existingIds, entityIds );
+        // if ( ids.length == 0 )
+        // {
+        // batch.addDelete( 0, indexKey );
+        // }
+        // else
+        // {
+        // batch.addInsert( 0, indexKey, ArrayUtil.toBytes( ids ) );
+        // }
     }
 
     public void commit( Database db )
     {
-//        try
-//        {
-//            db.insert( null ).get();
-//        }
-//        catch ( BabuDBException e )
-//        {
-//            throw new RuntimeException( e );
-//        }
+        // try
+        // {
+        // db.insert( null ).get();
+        // }
+        // catch ( BabuDBException e )
+        // {
+        // throw new RuntimeException( e );
+        // }
     }
 
     public long getLastCommittedTxId()
