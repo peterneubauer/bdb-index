@@ -67,14 +67,19 @@ public class TestBerkeleyBatchInsert extends Neo4jTestCase
         BatchInserterIndex index = provider.nodeIndex( "users",
                 BerkeleyDbIndexProvider.DEFAULT_CONFIG );
         Map<Integer, Long> ids = new HashMap<Integer, Long>();
-        for ( int i = 0; i < 100; i++ )
+        for ( int i = 0; i < 1000000; i++ )
         {
+            if ( i % 10000 == 0 )
+            {
+//                restartTx();
+                System.out.println( i );
+            }
             long id = inserter.createNode( null );
             index.add( id, MapUtil.map( "name", "Joe" + i, "other", "Schmoe" ) );
             ids.put( i, id );
         }
 
-        for ( int i = 0; i < 100; i++ )
+        for ( int i = 0; i < 1000; i++ )
         {
             assertContains( index.get( "name", "Joe" + i ), ids.get( i ) );
         }
@@ -99,7 +104,6 @@ public class TestBerkeleyBatchInsert extends Neo4jTestCase
     }
 
    
-    @Ignore
     @Test
     public void testInsertionSpeed()
     {
