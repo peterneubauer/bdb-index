@@ -65,6 +65,7 @@ public class TestBerkeley extends Neo4jTestCase
         node2.delete();
     }
 
+    @Ignore
     @Test
     public void testInsertSome()
     {
@@ -83,7 +84,7 @@ public class TestBerkeley extends Neo4jTestCase
             assertEquals( 20, hits.size() );
         }
     }
-
+    @Ignore
     @Test
     public void testInsertionSpeed()
     {
