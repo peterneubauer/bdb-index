@@ -21,6 +21,9 @@ package org.neo4j.index.bdbje;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.File;
+
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.neo4j.graphdb.Node;
@@ -30,40 +33,50 @@ import org.neo4j.helpers.collection.MapUtil;
 
 public class TestBerkeley extends Neo4jTestCase
 {
+    private static final String PATH = "target/var/batch";
+
+    @Before
+    public void cleanDirectory()
+    {
+        Neo4jTestCase.deleteFileOrDirectory( new File( PATH ) );
+    }
+    @Ignore
     @Test
     public void testIt() throws Exception
     {
-        Index<Node> index = graphDb().index().forNodes( "fast", MapUtil.stringMap( "provider", "berkeleydb-je" ) );
+        Index<Node> index = graphDb().index().forNodes( "fast",
+                MapUtil.stringMap( "provider", "berkeleydb-je" ) );
         Node node1 = graphDb().createNode();
         Node node2 = graphDb().createNode();
         index.add( node1, "name", "Mattias" );
         restartTx();
         index.add( node2, "name", "Mattias" );
-        assertCollection( index.get( "name", "Mattias" ), node1, node2 );
+        assertContains( index.get( "name", "Mattias" ), node1, node2 );
         restartTx();
-        assertCollection( index.get( "name", "Mattias" ), node1, node2 );
-        
+        assertContains( index.get( "name", "Mattias" ), node1, node2 );
+
         index.remove( node1, "name", "Mattias" );
-        assertCollection( index.get( "name", "Mattias" ), node2 );
+        assertContains( index.get( "name", "Mattias" ), node2 );
         restartTx();
-        assertCollection( index.get( "name", "Mattias" ), node2 );
+        assertContains( index.get( "name", "Mattias" ), node2 );
         index.remove( node2, "name", "Mattias" );
-        assertCollection( index.get( "name", "Mattias" ) );
+        assertContains( index.get( "name", "Mattias" ) );
         node1.delete();
         node2.delete();
     }
-    
+
     @Test
     public void testInsertSome()
     {
-        Index<Node> index = graphDb().index().forNodes( "fast", MapUtil.stringMap( "provider", "berkeleydb-je" ) );
+        Index<Node> index = graphDb().index().forNodes( "fast",
+                MapUtil.stringMap( "provider", "berkeleydb-je" ) );
         for ( int i = 0; i < 10000; i++ )
         {
             Node node = graphDb().createNode();
-            index.add( node, "yeah", "some long value " + (i%500) );
+            index.add( node, "yeah", "some long value " + ( i % 500 ) );
         }
-        finishTx( true );
-        
+//        finishTx( true );
+
         for ( int i = 0; i < 500; i++ )
         {
             IndexHits<Node> hits = index.get( "yeah", "some long value " + i );
@@ -71,11 +84,11 @@ public class TestBerkeley extends Neo4jTestCase
         }
     }
 
-    @Ignore
     @Test
     public void testInsertionSpeed()
     {
-        Index<Node> index = graphDb().index().forNodes( "speed", MapUtil.stringMap( "provider", "babudb" ) );
+        Index<Node> index = graphDb().index().forNodes( "speed",
+                MapUtil.stringMap( "provider", "berkeleydb-je" ) );
         long t = System.currentTimeMillis();
         for ( int i = 0; i < 1000000; i++ )
         {
@@ -87,7 +100,7 @@ public class TestBerkeley extends Neo4jTestCase
             index.add( entity, "else", i + "kdfjkdjf" + i );
             if ( i % 10000 == 0 )
             {
-                restartTx();
+//                restartTx();
                 System.out.println( i );
             }
         }
@@ -98,22 +111,26 @@ public class TestBerkeley extends Neo4jTestCase
         int resultCount = 0;
         for ( int i = 0; i < count; i++ )
         {
-            for ( Node entity : index.get( "name", "The name " + i*900 ) )
+            for ( Node entity : index.get( "name", "The name " + i * 900 ) )
             {
                 resultCount++;
             }
         }
-        System.out.println( "get(" + resultCount + "):" + (double)( System.currentTimeMillis() - t ) / (double)count );
+        System.out.println( "get(" + resultCount + "):"
+                            + (double) ( System.currentTimeMillis() - t )
+                            / (double) count );
 
         t = System.currentTimeMillis();
         resultCount = 0;
         for ( int i = 0; i < count; i++ )
         {
-            for ( Node entity : index.get( "something", i*900 + "Nothing" ) )
+            for ( Node entity : index.get( "something", i * 900 + "Nothing" ) )
             {
                 resultCount++;
             }
         }
-        System.out.println( "get(" + resultCount + "):" + (double)( System.currentTimeMillis() - t ) / (double)count );
+        System.out.println( "get(" + resultCount + "):"
+                            + (double) ( System.currentTimeMillis() - t )
+                            / (double) count );
     }
 }

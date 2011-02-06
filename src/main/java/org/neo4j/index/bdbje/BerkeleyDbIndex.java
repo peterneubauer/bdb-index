@@ -36,6 +36,7 @@ import org.neo4j.kernel.impl.core.ReadOnlyDbException;
 import com.sleepycat.je.Database;
 import com.sleepycat.je.DatabaseEntry;
 import com.sleepycat.je.LockMode;
+import com.sleepycat.je.OperationStatus;
 
 public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements Index<T>
 {
@@ -77,13 +78,13 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
         Collection<Long> removed = tx != null ? tx.getRemovedIds( this, key, value ) :
                 Collections.<Long>emptyList();
         service.dataSource().getReadLock();
-        Database db = service.dataSource().getDatabase( identifier );
+        Database db = service.dataSource().getDatabase( identifier, key );
         List<Long> ids = new ArrayList<Long>( added );
         try
 
         {
             DatabaseEntry result = new DatabaseEntry();
-            db.get( null, new DatabaseEntry(BerkeleyDbDataSource.indexKey( key, value )), result, LockMode.READ_UNCOMMITTED );
+            OperationStatus status = db.get( null, new DatabaseEntry(value.toString().getBytes("UTF-8")), result, LockMode.READ_UNCOMMITTED );
             byte[] bytes = result.getData();
             if ( bytes != null )
             {

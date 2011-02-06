@@ -19,6 +19,7 @@
  */
 package org.neo4j.index.bdbje;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,6 +29,7 @@ import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexProvider;
 import org.neo4j.graphdb.index.RelationshipIndex;
 import org.neo4j.helpers.Service;
+import org.neo4j.helpers.collection.MapUtil;
 import org.neo4j.kernel.AbstractGraphDatabase;
 import org.neo4j.kernel.Config;
 import org.neo4j.kernel.KernelExtension;
@@ -37,6 +39,11 @@ import org.neo4j.kernel.impl.index.ReadOnlyIndexConnectionBroker;
 @Service.Implementation( KernelExtension.class )
 public class BerkeleyDbIndexProvider extends IndexProvider
 {
+    static final String KEY_PROVIDER = "provider";
+
+    public static final String SERVICE_NAME = "berkeleydb-je";
+    public static final Map<String, String> DEFAULT_CONFIG = Collections.unmodifiableMap( MapUtil.stringMap(
+                    KEY_PROVIDER, SERVICE_NAME ) );
     private GraphDatabaseService graphDb;
     private IndexConnectionBroker<BerkeleyDbXaConnection> broker;
     private BerkeleyDbDataSource dataSource;

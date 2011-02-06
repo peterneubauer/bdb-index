@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.neo4j.helpers.Pair;
 import org.neo4j.kernel.impl.index.IndexProviderStore;
 import org.neo4j.kernel.impl.index.IndexStore;
 import org.neo4j.kernel.impl.transaction.xaframework.LogBackedXaDataSource;
@@ -63,9 +64,8 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource
     final IndexStore indexStore;
     final IndexProviderStore store;
     private boolean closed;
-    final Database berkeleyDb;
 
-    private final Map<IndexIdentifier, Database> databases = new HashMap<IndexIdentifier, Database>();
+    private final Map<IndexIdentifier, Map<String, Database>> databases = new HashMap<IndexIdentifier, Map<String, Database>>();
 
     /**
      * Constructs this data source.
@@ -79,7 +79,7 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource
     {
         super( params );
         String storeDir = (String) params.get( "store_dir" );
-        this.baseStorePath = getStoreDir( storeDir );
+        this.baseStorePath = getStoreDir( storeDir ).first();
         this.indexStore = (IndexStore) params.get( IndexStore.class );
         this.store = newIndexStore( storeDir );
         boolean isReadOnly = params.containsKey( "read_only" ) ? (Boolean) params.get( "read_only" )
@@ -112,45 +112,29 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource
             xaContainer = null;
         }
 
-        try
-        {
-            EnvironmentConfig environmentConfig = new EnvironmentConfig();
-            environmentConfig.setAllowCreate( true );
-            environmentConfig.setConfigParam( "java.util.logging.level", "INFO" );
-            // perform other environment configurations
-            Environment environment = new Environment( new File(
-                    this.baseStorePath ), environmentConfig );
-            environmentConfig.setTransactional( false );
-            DatabaseConfig databaseConfig = new DatabaseConfig();
-            databaseConfig.setAllowCreate( true );
-            // perform other database configurations
-            berkeleyDb = environment.openDatabase( null, DB_NAME,
-                    databaseConfig );
-        }
-        catch ( Exception e )
-        {
-            throw new RuntimeException( e );
-        }
     }
 
-    static String getStoreDir( String dbStoreDir )
+    static Pair<String, Boolean> getStoreDir( String dbStoreDir )
     {
-        File dir = new File( new File( dbStoreDir ), "index" );
+        File dir = new File( dbStoreDir );
+        boolean created = false;
         if ( !dir.exists() )
         {
             if ( !dir.mkdirs() )
             {
                 throw new RuntimeException( "Unable to create directory path["
-                                            + dir.getAbsolutePath()
-                                            + "] for Neo4j store." );
+                    + dir.getAbsolutePath() + "] for Neo4j store." );
             }
+            created = true;
         }
-        return dir.getAbsolutePath();
+        if(dir.list().length == 0 ) {
+            created = true;
+        }
+        return Pair.of( dir.getAbsolutePath(), created );
     }
-
     static IndexProviderStore newIndexStore( String dbStoreDir )
     {
-        return new IndexProviderStore( new File( getStoreDir( dbStoreDir )
+        return new IndexProviderStore( new File( getStoreDir( dbStoreDir ).first()
                                                  + "/store.db" ) );
     }
 
@@ -165,7 +149,7 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource
         store.close();
         try
         {
-            berkeleyDb.close();
+            //berkeleyDb.close();
         }
         catch ( Exception e )
         {
@@ -278,33 +262,20 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource
         return String.valueOf( key + "|" + value ).getBytes();
     }
 
-    public Database getDatabase( IndexIdentifier identifier )
+    public Database getDatabase( IndexIdentifier identifier, Object key )
     {
-        Database db = this.databases.get( identifier );
-        if ( db != null )
-        {
-            return db;
+        Map<String, Database> db = databases.get(identifier);
+        if(null == db ) {
+            db = new HashMap<String, Database>();
+            databases.put( identifier, db );
         }
-
-        String dbName = identifier.indexName + "-"
-                        + identifier.itemClass.getSimpleName().toLowerCase();
-        try
-        {
-            db = berkeleyDb;// .getDatabaseManager().getDatabase( dbName );
+        Database result = db.get( key.toString() );
+        if(null == result ) {
+            result =  createDB(identifier, key);
+            db.put( key.toString(), result );
         }
-        catch ( Exception e )
-        {
-            // try
-            // {
-            // db = berkeleyDb.getDatabaseManager().createDatabase( dbName, 1 );
-            // }
-            // catch ( BabuDBException ee )
-            // {
-            throw new RuntimeException( e );
-            // }
-        }
-        this.databases.put( identifier, db );
-        return db;
+        
+        return result;
     }
 
     public void addEntry( Database db, IndexIdentifier identifier,
@@ -320,8 +291,7 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource
         }
         catch ( DatabaseException e )
         {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            e.printStackTrace(); 
         }
     }
 
@@ -373,5 +343,30 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource
     public long getLastCommittedTxId()
     {
         return this.store.getLastCommittedTx();
+    }
+    
+    private Database createDB( IndexIdentifier identifier, Object key )
+    {
+        try
+        {
+            EnvironmentConfig environmentConfig = new EnvironmentConfig();
+            environmentConfig.setAllowCreate( true );
+            environmentConfig.setConfigParam( "java.util.logging.level", "INFO" );
+            // perform other environment configurations
+            String dir = BerkeleyDbDataSource.getStoreDir( this.baseStorePath + "/" + identifier.indexName + "/" + key ).first();
+            Environment environment = new Environment( new File(
+                    dir ), environmentConfig );
+            environmentConfig.setTransactional( false );
+            DatabaseConfig databaseConfig = new DatabaseConfig();
+            databaseConfig.setAllowCreate( true );
+            // perform other database configurations
+            Database db = environment.openDatabase( null, key.toString(),
+                    databaseConfig );
+            return db;
+        }
+        catch ( Exception e )
+        {
+            throw new RuntimeException( e );
+        }
     }
 }
