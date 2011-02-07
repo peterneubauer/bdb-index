@@ -47,22 +47,22 @@ import com.sleepycat.je.OperationStatus;
 
 public class BerkeleyDbBatchInserterIndex implements BatchInserterIndex
 {
-    private final IndexIdentifier identifier;
-    
-    private final boolean createdNow;
-    private Map<String, LruCache<String, Collection<Long>>> cache;
+    //private final boolean createdNow;
+    //private Map<String, LruCache<String, Collection<Long>>> cache;
 
     private Map<String, Database> dbs = new HashMap<String, Database>();
 
     private Pair<String, Boolean> storeDir;
 
+    private final IndexIdentifier identifier;
+
     BerkeleyDbBatchInserterIndex( BerkeleyDbBatchInserterIndexProvider provider,
             BatchInserter inserter, IndexIdentifier identifier, Map<String, String> config )
     {
+        this.identifier = identifier;
         String dbStoreDir = ((BatchInserterImpl) inserter).getStore();
         storeDir = BerkeleyDbDataSource.getStoreDir( dbStoreDir + "/index/bdb/"+ identifier.itemClass.getSimpleName() + "/" +identifier.indexName );
-        this.createdNow = storeDir.other();
-        this.identifier = identifier;
+        //this.createdNow = storeDir.other();
     }
 
     public void add( long entityId, Map<String, Object> properties )
@@ -101,17 +101,13 @@ public class BerkeleyDbBatchInserterIndex implements BatchInserterIndex
             EnvironmentConfig environmentConfig = new EnvironmentConfig();
             environmentConfig.setAllowCreate( true );
             environmentConfig.setDurability( Durability.COMMIT_WRITE_NO_SYNC );
-            environmentConfig.setCachePercent( 50 );
-//            environmentConfig.setConfigParam( "java.util.logging.level", "INFO" );
-            // perform other environment configurations
             String dir = BerkeleyDbDataSource.getStoreDir( this.storeDir.first() + "/" + key ).first();
             Environment environment = new Environment( new File(
                     dir ), environmentConfig );
-            environmentConfig.setCacheSize(16000000 );//16MB
+            environmentConfig.setCachePercent( 10 );
             environmentConfig.setTransactional( false );
             DatabaseConfig databaseConfig = new DatabaseConfig();
             databaseConfig.setAllowCreate( true );
-            // perform other database configurations
             Database db = environment.openDatabase( null, key,
                     databaseConfig );
             return db;
