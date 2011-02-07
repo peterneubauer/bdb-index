@@ -123,19 +123,22 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource
             if ( !dir.mkdirs() )
             {
                 throw new RuntimeException( "Unable to create directory path["
-                    + dir.getAbsolutePath() + "] for Neo4j store." );
+                                            + dir.getAbsolutePath()
+                                            + "] for Neo4j store." );
             }
             created = true;
         }
-        if(dir.list().length == 0 ) {
+        if ( dir.list().length == 0 )
+        {
             created = true;
         }
         return Pair.of( dir.getAbsolutePath(), created );
     }
+
     static IndexProviderStore newIndexStore( String dbStoreDir )
     {
-        return new IndexProviderStore( new File( getStoreDir( dbStoreDir ).first()
-                                                 + "/store.db" ) );
+        return new IndexProviderStore( new File(
+                getStoreDir( dbStoreDir ).first() + "/store.db" ) );
     }
 
     @Override
@@ -149,7 +152,7 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource
         store.close();
         try
         {
-            //berkeleyDb.close();
+            // berkeleyDb.close();
         }
         catch ( Exception e )
         {
@@ -264,17 +267,19 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource
 
     public Database getDatabase( IndexIdentifier identifier, Object key )
     {
-        Map<String, Database> db = databases.get(identifier);
-        if(null == db ) {
+        Map<String, Database> db = databases.get( identifier );
+        if ( null == db )
+        {
             db = new HashMap<String, Database>();
             databases.put( identifier, db );
         }
         Database result = db.get( key.toString() );
-        if(null == result ) {
-            result =  createDB(identifier, key);
+        if ( null == result )
+        {
+            result = createDB( identifier, key );
             db.put( key.toString(), result );
         }
-        
+
         return result;
     }
 
@@ -291,7 +296,7 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource
         }
         catch ( DatabaseException e )
         {
-            e.printStackTrace(); 
+            e.printStackTrace();
         }
     }
 
@@ -344,18 +349,22 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource
     {
         return this.store.getLastCommittedTx();
     }
-    
+
     private Database createDB( IndexIdentifier identifier, Object key )
     {
         try
         {
             EnvironmentConfig environmentConfig = new EnvironmentConfig();
             environmentConfig.setAllowCreate( true );
-//            environmentConfig.setConfigParam( "java.util.logging.level", "INFO" );
+            // environmentConfig.setConfigParam( "java.util.logging.level",
+            // "INFO" );
             // perform other environment configurations
-            String dir = BerkeleyDbDataSource.getStoreDir( this.baseStorePath + "/" + identifier.indexName + "/" + key ).first();
-            Environment environment = new Environment( new File(
-                    dir ), environmentConfig );
+            String dir = BerkeleyDbDataSource.getStoreDir(
+                    this.baseStorePath + "/index/bdb/"
+                            + identifier.itemClass.getSimpleName() + "/"
+                            + identifier.indexName + "/" + key ).first();
+            Environment environment = new Environment( new File( dir ),
+                    environmentConfig );
             environmentConfig.setTransactional( false );
             DatabaseConfig databaseConfig = new DatabaseConfig();
             databaseConfig.setAllowCreate( true );

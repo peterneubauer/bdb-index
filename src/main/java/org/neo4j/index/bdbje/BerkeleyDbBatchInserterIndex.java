@@ -45,7 +45,7 @@ import com.sleepycat.je.EnvironmentConfig;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
 
-class BerkeleyDbBatchInserterIndex implements BatchInserterIndex
+public class BerkeleyDbBatchInserterIndex implements BatchInserterIndex
 {
     private final IndexIdentifier identifier;
     
@@ -60,7 +60,7 @@ class BerkeleyDbBatchInserterIndex implements BatchInserterIndex
             BatchInserter inserter, IndexIdentifier identifier, Map<String, String> config )
     {
         String dbStoreDir = ((BatchInserterImpl) inserter).getStore();
-        storeDir = BerkeleyDbDataSource.getStoreDir( dbStoreDir + "/"+identifier.indexName );
+        storeDir = BerkeleyDbDataSource.getStoreDir( dbStoreDir + "/index/bdb/"+ identifier.itemClass.getSimpleName() + "/" +identifier.indexName );
         this.createdNow = storeDir.other();
         this.identifier = identifier;
     }
@@ -94,7 +94,7 @@ class BerkeleyDbBatchInserterIndex implements BatchInserterIndex
         }
     }
     
-    private Database createDB( String key )
+    public Database createDB( String key )
     {
         try
         {
