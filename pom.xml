@@ -20,9 +20,9 @@
       <version>4.7</version>
     </dependency>
     <dependency>
-      <groupId>berkeleydb</groupId>
+      <groupId>com.sleepycat</groupId>
       <artifactId>je</artifactId>
-      <version>3.2.76</version>
+      <version>4.0.103</version>
     </dependency>
 
   </dependencies>
@@ -38,4 +38,12 @@
       </plugin>
     </plugins>
   </build>
+  <repositories>
+    <repository>
+      <id>oracleReleases</id>
+      <name>Oracle Released Java Packages</name>
+      <url>http://download.oracle.com/maven</url>
+      <layout>default</layout>
+    </repository>
+  </repositories>
 </project>

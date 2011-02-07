@@ -51,6 +51,7 @@ import org.neo4j.kernel.impl.batchinsert.BatchInserterImpl;
 public class TestBerkeleyBatchInsert extends Neo4jTestCase
 {
     private static final String PATH = "target/var/batch";
+    private static final int MAX = 1000000;
 
     @Before
     public void cleanDirectory()
@@ -66,22 +67,28 @@ public class TestBerkeleyBatchInsert extends Neo4jTestCase
                 inserter );
         BatchInserterIndex index = provider.nodeIndex( "users",
                 BerkeleyDbIndexProvider.DEFAULT_CONFIG );
-        Map<Integer, Long> ids = new HashMap<Integer, Long>();
-        for ( int i = 0; i < 10000000; i++ )
+        for ( int i = 0; i < MAX; i++ )
         {
             if ( i % 10000 == 0 )
             {
-//                restartTx();
+                // restartTx();
                 System.out.println( i );
             }
-            long id = inserter.createNode( null );
-            index.add( id, MapUtil.map( "name", "Joe" + i, "other", "Schmoe" ) );
-            ids.put( i, id );
+            inserter.createNode( null );
+            index.add( i, MapUtil.map( "name", "Joe" + i, "other", "Schmoe" ) );
+            // ids.put( i, id );
         }
 
-        for ( int i = 0; i < 1000; i++ )
+        for ( int i = 0; i < MAX; i++ )
         {
-            assertContains( index.get( "name", "Joe" + i ), ids.get( i ) );
+            if ( i % 10000 == 0 )
+            {
+                // restartTx();
+                System.out.println( i );
+            }
+            int key = (int) Math.floor( Math.random() * MAX );
+            assertEquals( key + "",
+                    index.get( "name", "Joe" + key ).getSingle().toString() );
         }
         provider.shutdown();
         inserter.shutdown();
@@ -91,25 +98,20 @@ public class TestBerkeleyBatchInsert extends Neo4jTestCase
         Index<Node> dbIndex = db.index().forNodes( "users" );
         for ( int i = 0; i < 100; i++ )
         {
-            assertContains( dbIndex.get( "name", "Joe" + i ),
-                    db.getNodeById( ids.get( i ) ) );
-        }
-
-        Collection<Node> nodes = new ArrayList<Node>();
-        for ( long id : ids.values() )
-        {
-            nodes.add( db.getNodeById( id ) );
+            assertEquals( i,
+                    dbIndex.get( "name", "Joe" + i ).getSingle().getId() );
         }
         db.shutdown();
     }
 
-   
     @Test
     public void testInsertionSpeed()
     {
         BatchInserter inserter = new BatchInserterImpl( PATH );
-        BatchInserterIndexProvider provider = new BerkeleyDbBatchInserterIndexProvider( inserter );
-        BatchInserterIndex index = provider.nodeIndex( "yeah", BerkeleyDbIndexProvider.DEFAULT_CONFIG );
+        BatchInserterIndexProvider provider = new BerkeleyDbBatchInserterIndexProvider(
+                inserter );
+        BatchInserterIndex index = provider.nodeIndex( "yeah",
+                BerkeleyDbIndexProvider.DEFAULT_CONFIG );
         index.setCacheCapacity( "key", 1000000 );
         long t = System.currentTimeMillis();
         for ( int i = 0; i < 1000000; i++ )
@@ -136,7 +138,8 @@ public class TestBerkeleyBatchInsert extends Neo4jTestCase
         BatchInserter inserter = new BatchInserterImpl( PATH );
         BerkeleyDbBatchInserterIndexProvider indexProvider = new BerkeleyDbBatchInserterIndexProvider(
                 inserter );
-        BatchInserterIndex persons = indexProvider.nodeIndex( "persons",BerkeleyDbIndexProvider.DEFAULT_CONFIG );
+        BatchInserterIndex persons = indexProvider.nodeIndex( "persons",
+                BerkeleyDbIndexProvider.DEFAULT_CONFIG );
         Map<String, Object> properties = MapUtil.map( "name", "test" );
         long node = inserter.createNode( properties );
         persons.add( node, properties );
@@ -189,7 +192,7 @@ public class TestBerkeleyBatchInsert extends Neo4jTestCase
         indexProvider.shutdown();
         inserter.shutdown();
     }
-    
+
     private enum EdgeType implements RelationshipType
     {
         KNOWS

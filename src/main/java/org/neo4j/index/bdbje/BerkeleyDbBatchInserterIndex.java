@@ -39,6 +39,7 @@ import org.neo4j.kernel.impl.cache.LruCache;
 import com.sleepycat.je.Database;
 import com.sleepycat.je.DatabaseConfig;
 import com.sleepycat.je.DatabaseEntry;
+import com.sleepycat.je.Durability;
 import com.sleepycat.je.Environment;
 import com.sleepycat.je.EnvironmentConfig;
 import com.sleepycat.je.LockMode;
@@ -83,6 +84,7 @@ class BerkeleyDbBatchInserterIndex implements BatchInserterIndex
                 dos.writeLong( entityId );
                 dos.flush();
                 db.put( null, valueEntry, new DatabaseEntry(baus.toByteArray()) );
+                
                 dos.close();
             }
         }
@@ -98,11 +100,14 @@ class BerkeleyDbBatchInserterIndex implements BatchInserterIndex
         {
             EnvironmentConfig environmentConfig = new EnvironmentConfig();
             environmentConfig.setAllowCreate( true );
-            environmentConfig.setConfigParam( "java.util.logging.level", "INFO" );
+            environmentConfig.setDurability( Durability.COMMIT_WRITE_NO_SYNC );
+            environmentConfig.setCachePercent( 50 );
+//            environmentConfig.setConfigParam( "java.util.logging.level", "INFO" );
             // perform other environment configurations
             String dir = BerkeleyDbDataSource.getStoreDir( this.storeDir.first() + "/" + key ).first();
             Environment environment = new Environment( new File(
                     dir ), environmentConfig );
+            environmentConfig.setCacheSize(16000000 );//16MB
             environmentConfig.setTransactional( false );
             DatabaseConfig databaseConfig = new DatabaseConfig();
             databaseConfig.setAllowCreate( true );

@@ -351,7 +351,7 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource
         {
             EnvironmentConfig environmentConfig = new EnvironmentConfig();
             environmentConfig.setAllowCreate( true );
-            environmentConfig.setConfigParam( "java.util.logging.level", "INFO" );
+//            environmentConfig.setConfigParam( "java.util.logging.level", "INFO" );
             // perform other environment configurations
             String dir = BerkeleyDbDataSource.getStoreDir( this.baseStorePath + "/" + identifier.indexName + "/" + key ).first();
             Environment environment = new Environment( new File(
