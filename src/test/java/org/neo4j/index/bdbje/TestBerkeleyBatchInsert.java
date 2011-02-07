@@ -67,7 +67,7 @@ public class TestBerkeleyBatchInsert extends Neo4jTestCase
         BatchInserterIndex index = provider.nodeIndex( "users",
                 BerkeleyDbIndexProvider.DEFAULT_CONFIG );
         Map<Integer, Long> ids = new HashMap<Integer, Long>();
-        for ( int i = 0; i < 1000000; i++ )
+        for ( int i = 0; i < 10000000; i++ )
         {
             if ( i % 10000 == 0 )
             {
