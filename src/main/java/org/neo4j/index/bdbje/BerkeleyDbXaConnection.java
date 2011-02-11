@@ -35,13 +35,13 @@ import org.neo4j.kernel.impl.transaction.xaframework.XaResourceManager;
  */
 class BerkeleyDbXaConnection extends IndexXaConnection
 {
-    private final LuceneXaResource xaResource;
+    private final BerkeleyDbXaResource xaResource;
 
     BerkeleyDbXaConnection( Object identifier, XaResourceManager xaRm, 
         byte[] branchId )
     {
         super( xaRm );
-        xaResource = new LuceneXaResource( identifier, xaRm, branchId );
+        xaResource = new BerkeleyDbXaResource( identifier, xaRm, branchId );
     }
     
     @Override
@@ -50,11 +50,11 @@ class BerkeleyDbXaConnection extends IndexXaConnection
         return xaResource;
     }
     
-    private static class LuceneXaResource extends XaResourceHelpImpl
+    private static class BerkeleyDbXaResource extends XaResourceHelpImpl
     {
         private final Object identifier;
         
-        LuceneXaResource( Object identifier, XaResourceManager xaRm, 
+        BerkeleyDbXaResource( Object identifier, XaResourceManager xaRm, 
             byte[] branchId )
         {
             super( xaRm, branchId );
@@ -64,10 +64,10 @@ class BerkeleyDbXaConnection extends IndexXaConnection
         @Override
         public boolean isSameRM( XAResource xares )
         {
-            if ( xares instanceof LuceneXaResource )
+            if ( xares instanceof BerkeleyDbXaResource )
             {
                 return identifier.equals( 
-                    ((LuceneXaResource) xares).identifier );
+                    ((BerkeleyDbXaResource) xares).identifier );
             }
             return false;
         }

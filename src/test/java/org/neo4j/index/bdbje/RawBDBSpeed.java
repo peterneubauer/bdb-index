@@ -43,7 +43,6 @@ public class RawBDBSpeed
         deleteFileOrDirectory( bdbDir );
         EnvironmentConfig environmentConfig = new EnvironmentConfig();
         environmentConfig.setAllowCreate( true );
-        environmentConfig.setConfigParam( "java.util.logging.level", "INFO" );
         // perform other environment configurations
         Environment environment = new Environment( bdbDir, environmentConfig );
         environmentConfig.setTransactional( false );
@@ -53,14 +52,15 @@ public class RawBDBSpeed
         bdb = environment.openDatabase( null, DB_NAME, databaseConfig );
 
         long t = System.currentTimeMillis();
-        for ( int i = 0; i < 5000000; i++ )
+        int max = 50000000;
+        for ( int i = 0; i < max; i++ )
         {
-            String key = "" + i;
+            String key = "" + Math.floor( Math.random() * max);
             bdb.put( null, new DatabaseEntry( key.getBytes() ),
                     new DatabaseEntry( key.getBytes() ) );
             if ( i % 100000 == 0 )
             {
-                System.out.print( "." );
+                System.out.println( i );
             }
         }
         System.out.println( "insert time:" + ( System.currentTimeMillis() - t ) );

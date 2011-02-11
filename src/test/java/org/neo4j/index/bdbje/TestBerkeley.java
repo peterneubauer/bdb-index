@@ -40,16 +40,18 @@ public class TestBerkeley extends Neo4jTestCase
     {
         Neo4jTestCase.deleteFileOrDirectory( new File( PATH ) );
     }
-    @Ignore
+
     @Test
     public void testIt() throws Exception
     {
         Index<Node> index = graphDb().index().forNodes( "fast",
-                MapUtil.stringMap( "provider", "berkeleydb-je" ) );
+                BerkeleyDbIndexProvider.DEFAULT_CONFIG );
         Node node1 = graphDb().createNode();
         Node node2 = graphDb().createNode();
         index.add( node1, "name", "Mattias" );
+        assertContains( index.get( "name", "Mattias" ), node1 );
         restartTx();
+        assertContains( index.get( "name", "Mattias" ), node1 );
         index.add( node2, "name", "Mattias" );
         assertContains( index.get( "name", "Mattias" ), node1, node2 );
         restartTx();

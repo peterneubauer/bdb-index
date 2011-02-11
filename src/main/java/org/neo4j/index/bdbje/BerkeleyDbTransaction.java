@@ -176,7 +176,6 @@ class BerkeleydbTransaction extends XaTransaction
             {
                 IndexIdentifier identifier = entry.getKey();
                 Collection<BerkeleyDbCommand> commandList = entry.getValue();
-                //Database db = dataSource.getDatabase( identifier );
                 for ( BerkeleyDbCommand command : commandList )
                 {
                     if ( command instanceof CreateCommand )
@@ -189,13 +188,14 @@ class BerkeleydbTransaction extends XaTransaction
                     long[] entityIds = command.entityIds;
                     String key = command.key;
                     String value = command.value;
+                    Database db = dataSource.getDatabase( identifier, key );
                     if ( command instanceof AddCommand )
                     {
-                    //    dataSource.addEntry( db, identifier, entityIds, key, value );
+                        dataSource.addEntry( db, identifier, entityIds, key, value );
                     }
                     else if ( command instanceof RemoveCommand )
                     {
-                    //    dataSource.removeEntry( db, identifier, entityIds, key, value );
+                        dataSource.removeEntry( db, identifier, entityIds, key, value );
                     }
                     else
                     {
