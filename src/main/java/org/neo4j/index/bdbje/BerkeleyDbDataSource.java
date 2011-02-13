@@ -137,8 +137,7 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource
 
     static IndexProviderStore newIndexStore( String dbStoreDir )
     {
-        return new IndexProviderStore( new File(
-                getStoreDir( dbStoreDir ).first() + "/store.db" ) );
+        return new IndexProviderStore( dbStoreDir + "/store.db" );
     }
 
     @Override
@@ -262,7 +261,7 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource
 
     public static byte[] indexKey( String key, Object value )
     {
-        return String.valueOf( key + "|" + value ).getBytes();
+        return String.valueOf( "" + value ).getBytes();
     }
 
     public Database getDatabase( IndexIdentifier identifier, Object key )
@@ -320,29 +319,28 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource
     public void removeEntry( Database db, IndexIdentifier identifier,
             long[] entityIds, String key, String value )
     {
-        // byte[] indexKey = indexKey( key, value );
-        // long[] existingIds = getExistingIds( db, indexKey );
-        // long[] ids = ArrayUtil.exclude( existingIds, entityIds );
-        // if ( ids.length == 0 )
-        // {
-        // batch.addDelete( 0, indexKey );
-        // }
-        // else
-        // {
-        // batch.addInsert( 0, indexKey, ArrayUtil.toBytes( ids ) );
-        // }
+        byte[] indexKey = indexKey( key, value );
+        long[] existingIds = getExistingIds( db, indexKey );
+        long[] ids = ArrayUtil.exclude( existingIds, entityIds );
+        if ( ids.length == 0 )
+        {
+            db.removeSequence(
+                    null,
+                    new DatabaseEntry( BerkeleyDbDataSource.indexKey( key,
+                            value ) ) );
+        }
+        else
+        {
+            db.put( null,
+                    new DatabaseEntry( BerkeleyDbDataSource.indexKey( key,
+                            value ) ),
+                    new DatabaseEntry( ArrayUtil.toBytes( ids ) ) );
+        }
     }
 
     public void commit( Database db )
     {
-        // try
-        // {
-        // db.insert( null ).get();
-        // }
-        // catch ( BabuDBException e )
-        // {
-        // throw new RuntimeException( e );
-        // }
+        db.sync();
     }
 
     public long getLastCommittedTxId()

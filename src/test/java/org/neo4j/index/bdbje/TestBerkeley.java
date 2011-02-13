@@ -49,9 +49,12 @@ public class TestBerkeley extends Neo4jTestCase
         Node node1 = graphDb().createNode();
         Node node2 = graphDb().createNode();
         index.add( node1, "name", "Mattias" );
+        index.add( node1, "node_osm_id", 123 );
         assertContains( index.get( "name", "Mattias" ), node1 );
+        assertContains( index.get( "node_osm_id", 123 ), node1 );
         restartTx();
         assertContains( index.get( "name", "Mattias" ), node1 );
+        assertContains( index.get( "node_osm_id", 123 ), node1 );
         index.add( node2, "name", "Mattias" );
         assertContains( index.get( "name", "Mattias" ), node1, node2 );
         restartTx();
@@ -67,7 +70,6 @@ public class TestBerkeley extends Neo4jTestCase
         node2.delete();
     }
 
-    @Ignore
     @Test
     public void testInsertSome()
     {
@@ -78,7 +80,7 @@ public class TestBerkeley extends Neo4jTestCase
             Node node = graphDb().createNode();
             index.add( node, "yeah", "some long value " + ( i % 500 ) );
         }
-//        finishTx( true );
+        // finishTx( true );
 
         for ( int i = 0; i < 500; i++ )
         {
@@ -86,6 +88,7 @@ public class TestBerkeley extends Neo4jTestCase
             assertEquals( 20, hits.size() );
         }
     }
+
     @Ignore
     @Test
     public void testInsertionSpeed()
@@ -103,7 +106,7 @@ public class TestBerkeley extends Neo4jTestCase
             index.add( entity, "else", i + "kdfjkdjf" + i );
             if ( i % 10000 == 0 )
             {
-//                restartTx();
+                // restartTx();
                 System.out.println( i );
             }
         }

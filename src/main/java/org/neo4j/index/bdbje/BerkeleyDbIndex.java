@@ -84,7 +84,7 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 
         {
             DatabaseEntry result = new DatabaseEntry();
-            OperationStatus status = db.get( null, new DatabaseEntry(value.toString().getBytes("UTF-8")), result, LockMode.READ_UNCOMMITTED );
+            OperationStatus status = db.get( null, new DatabaseEntry(BerkeleyDbDataSource.indexKey( key, value )), result, LockMode.READ_UNCOMMITTED );
             byte[] bytes = result.getData();
             if ( bytes != null )
             {
