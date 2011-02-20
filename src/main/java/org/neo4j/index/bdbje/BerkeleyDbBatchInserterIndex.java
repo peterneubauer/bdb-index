@@ -25,7 +25,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,7 +33,6 @@ import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.helpers.Pair;
 import org.neo4j.kernel.impl.batchinsert.BatchInserter;
 import org.neo4j.kernel.impl.batchinsert.BatchInserterImpl;
-import org.neo4j.kernel.impl.cache.LruCache;
 
 import com.sleepycat.je.Database;
 import com.sleepycat.je.DatabaseConfig;

@@ -65,7 +65,7 @@ public class BerkeleyDbBatchInserterIndexProvider implements BatchInserterIndexP
         if ( config != null )
         {
             config = MapUtil.stringMap( new HashMap<String, String>( config ),
-                    "provider", BerkeleyDbIndexProvider.SERVICE_NAME );
+                    "provider", BerkeleyDbIndexImplementation.SERVICE_NAME );
             indexStore.setIfNecessary( cls, indexName, config );
             return config;
         }

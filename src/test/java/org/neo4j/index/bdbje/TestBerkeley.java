@@ -45,7 +45,7 @@ public class TestBerkeley extends Neo4jTestCase
     public void testIt() throws Exception
     {
         Index<Node> index = graphDb().index().forNodes( "fast",
-                BerkeleyDbIndexProvider.DEFAULT_CONFIG );
+                BerkeleyDbIndexImplementation.DEFAULT_CONFIG );
         Node node1 = graphDb().createNode();
         Node node2 = graphDb().createNode();
         index.add( node1, "name", "Mattias" );

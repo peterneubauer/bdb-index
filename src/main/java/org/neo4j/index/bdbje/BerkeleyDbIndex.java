@@ -40,15 +40,15 @@ import com.sleepycat.je.OperationStatus;
 
 public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements Index<T>
 {
-    final BerkeleyDbIndexProvider service;
+    final BerkeleyDbIndexImplementation service;
     final IndexIdentifier identifier;
-    
-    BerkeleyDbIndex( BerkeleyDbIndexProvider provider, IndexIdentifier identifier )
+
+    BerkeleyDbIndex( BerkeleyDbIndexImplementation implementation, IndexIdentifier identifier )
     {
-        this.service = provider;
+        this.service = implementation;
         this.identifier = identifier;
     }
-    
+
     BerkeleyDbXaConnection getConnection()
     {
         if ( service.broker() == null )
@@ -57,13 +57,13 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
         }
         return service.broker().acquireResourceConnection();
     }
-    
+
     BerkeleyDbXaConnection getReadOnlyConnection()
     {
         return service.broker() == null ? null :
                 service.broker().acquireReadOnlyResourceConnection();
     }
-    
+
     public void add( T entity, String key, Object value )
     {
         getConnection().add( this, entity, key, value );
@@ -114,7 +114,7 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
         };
         return new IndexHitsImpl<T>( entities, ids.size() );
     }
-    
+
     protected abstract T idToEntity( Long id );
 
     public IndexHits<T> query( Object queryOrQueryObject )
@@ -141,17 +141,17 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
     {
         getConnection().remove( this, entity, key, value );
     }
-    
+
     public void delete()
     {
         throw new UnsupportedOperationException();
     }
-    
+
     static class NodeIndex extends BerkeleyDbIndex<Node>
     {
-        NodeIndex( BerkeleyDbIndexProvider provider, IndexIdentifier identifier )
+        NodeIndex( BerkeleyDbIndexImplementation implementation, IndexIdentifier identifier )
         {
-            super( provider, identifier );
+            super( implementation, identifier );
         }
 
         @Override
@@ -175,9 +175,9 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 
     static class RelationshipIndex extends BerkeleyDbIndex<Relationship>
     {
-        RelationshipIndex( BerkeleyDbIndexProvider provider, IndexIdentifier identifier )
+        RelationshipIndex( BerkeleyDbIndexImplementation implementation, IndexIdentifier identifier )
         {
-            super( provider, identifier );
+            super( implementation, identifier );
         }
 
         @Override

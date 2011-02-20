@@ -23,9 +23,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -66,7 +63,7 @@ public class TestBerkeleyBatchInsert extends Neo4jTestCase
         BatchInserterIndexProvider provider = new BerkeleyDbBatchInserterIndexProvider(
                 inserter );
         BatchInserterIndex index = provider.nodeIndex( "users",
-                BerkeleyDbIndexProvider.DEFAULT_CONFIG );
+                BerkeleyDbIndexImplementation.DEFAULT_CONFIG );
         for ( int i = 0; i < MAX; i++ )
         {
             if ( i % 10000 == 0 )
@@ -111,7 +108,7 @@ public class TestBerkeleyBatchInsert extends Neo4jTestCase
         BatchInserterIndexProvider provider = new BerkeleyDbBatchInserterIndexProvider(
                 inserter );
         BatchInserterIndex index = provider.nodeIndex( "yeah",
-                BerkeleyDbIndexProvider.DEFAULT_CONFIG );
+                BerkeleyDbIndexImplementation.DEFAULT_CONFIG );
         index.setCacheCapacity( "key", 1000000 );
         long t = System.currentTimeMillis();
         for ( int i = 0; i < 1000000; i++ )
@@ -139,7 +136,7 @@ public class TestBerkeleyBatchInsert extends Neo4jTestCase
         BerkeleyDbBatchInserterIndexProvider indexProvider = new BerkeleyDbBatchInserterIndexProvider(
                 inserter );
         BatchInserterIndex persons = indexProvider.nodeIndex( "persons",
-                BerkeleyDbIndexProvider.DEFAULT_CONFIG );
+                BerkeleyDbIndexImplementation.DEFAULT_CONFIG );
         Map<String, Object> properties = MapUtil.map( "name", "test" );
         long node = inserter.createNode( properties );
         persons.add( node, properties );

@@ -60,7 +60,7 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource
 
     private final XaContainer xaContainer;
     private final String baseStorePath;
-    private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     final IndexStore indexStore;
     final IndexProviderStore store;
     private boolean closed;
@@ -69,7 +69,7 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource
 
     /**
      * Constructs this data source.
-     * 
+     *
      * @param params XA parameters.
      * @throws InstantiationException if the data source couldn't be
      *             instantiated
@@ -137,7 +137,8 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource
 
     static IndexProviderStore newIndexStore( String dbStoreDir )
     {
-        return new IndexProviderStore( dbStoreDir + "/store.db" );
+        // FIXME: is this really correct? doesn't seem safe...
+        return new IndexProviderStore( new File( dbStoreDir, "store.db" ) );
     }
 
     @Override
@@ -343,6 +344,7 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource
         db.sync();
     }
 
+    @Override
     public long getLastCommittedTxId()
     {
         return this.store.getLastCommittedTx();
