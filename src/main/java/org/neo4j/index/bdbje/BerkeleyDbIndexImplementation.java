@@ -46,6 +46,8 @@ public class BerkeleyDbIndexImplementation extends IndexImplementation
     private final IndexConnectionBroker<BerkeleyDbXaConnection> broker;
     private final BerkeleyDbDataSource dataSource;
 
+    private Map<String, BerkeleyDbIndex.NodeIndex> nodeIndicies = new HashMap();
+
     public BerkeleyDbIndexImplementation( AbstractGraphDatabase db )
     {
         this( db, db.getConfig() );
@@ -88,7 +90,14 @@ public class BerkeleyDbIndexImplementation extends IndexImplementation
     @Override
     public Index<Node> nodeIndex( String indexName, Map<String, String> config )
     {
-        return new BerkeleyDbIndex.NodeIndex( this, new IndexIdentifier( Node.class, indexName ) );
+        BerkeleyDbIndex.NodeIndex result = nodeIndicies.get(indexName);
+        if (null != result ) {
+            
+        } else {
+            result = new BerkeleyDbIndex.NodeIndex( this, new IndexIdentifier( Node.class, indexName ) );
+            nodeIndicies.put( indexName, result );
+        }
+        return result;
     }
 
     @Override

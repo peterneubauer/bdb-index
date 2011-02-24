@@ -21,9 +21,6 @@ package org.neo4j.index.bdbje;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.File;
-
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.neo4j.graphdb.Node;
@@ -33,13 +30,6 @@ import org.neo4j.helpers.collection.MapUtil;
 
 public class TestBerkeley extends Neo4jTestCase
 {
-    private static final String PATH = "target/var/batch";
-
-    @Before
-    public void cleanDirectory()
-    {
-        Neo4jTestCase.deleteFileOrDirectory( new File( PATH ) );
-    }
 
     @Test
     public void testIt() throws Exception

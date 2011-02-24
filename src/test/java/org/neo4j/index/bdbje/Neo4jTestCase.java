@@ -99,10 +99,6 @@ public abstract class Neo4jTestCase
         graphDb.shutdown();
     }
 
-    protected void beforeShutdown()
-    {
-    }
-
     protected File getBasePath()
     {
         return basePath;

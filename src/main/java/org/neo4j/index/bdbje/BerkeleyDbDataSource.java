@@ -56,7 +56,6 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource
 {
     public static final String DEFAULT_NAME = "bdb";
     public static final byte[] DEFAULT_BRANCH_ID = "231564".getBytes();
-    private static final String DB_NAME = "berkeleydb";
 
     private final XaContainer xaContainer;
     private final String baseStorePath;

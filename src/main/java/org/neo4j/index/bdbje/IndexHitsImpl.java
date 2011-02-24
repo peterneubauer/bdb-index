@@ -50,9 +50,9 @@ import org.neo4j.graphdb.index.IndexHits;
  *
  * @param <T> the type of items.
  */
-public class IndexHitsImpl<T> implements IndexHits<T>
+public class IndexHitsImpl<SpatialDatabaseRecord> implements IndexHits<SpatialDatabaseRecord>
 {
-    private final Iterator<T> hits;
+    private final Iterator<SpatialDatabaseRecord> hits;
     private final int size;
     
     /**
@@ -61,7 +61,7 @@ public class IndexHitsImpl<T> implements IndexHits<T>
      * @param hits the hits to iterate through.
      * @param size the size of the iteration.
      */
-    public IndexHitsImpl( Iterable<T> hits, int size )
+    public IndexHitsImpl( Iterable<SpatialDatabaseRecord> hits, int size )
     {
         this( hits.iterator(), size );
     }
@@ -72,13 +72,13 @@ public class IndexHitsImpl<T> implements IndexHits<T>
      * @param hits the hits to iterate through.
      * @param size the size of the iteration.
      */
-    public IndexHitsImpl( Iterator<T> hits, int size )
+    public IndexHitsImpl( Iterator<SpatialDatabaseRecord> hits, int size )
     {
         this.hits = hits;
         this.size = size;
     }
     
-    public Iterator<T> iterator()
+    public Iterator<SpatialDatabaseRecord> iterator()
     {
         return this.hits;
     }
@@ -98,7 +98,7 @@ public class IndexHitsImpl<T> implements IndexHits<T>
         return this.hits.hasNext();
     }
 
-    public T next()
+    public SpatialDatabaseRecord next()
     {
         return this.hits.next();
     }
@@ -108,9 +108,9 @@ public class IndexHitsImpl<T> implements IndexHits<T>
         this.hits.remove();
     }
     
-    public T getSingle()
+    public SpatialDatabaseRecord getSingle()
     {
-        T result = this.hits.hasNext() ? this.hits.next() : null;
+        SpatialDatabaseRecord result = this.hits.hasNext() ? this.hits.next() : null;
         if ( this.hits.hasNext() )
         {
             throw new NoSuchElementException();
