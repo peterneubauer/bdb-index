@@ -171,6 +171,20 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
         {
             return Node.class;
         }
+
+        @Override
+        public void remove( Node arg0 )
+        {
+            // TODO Auto-generated method stub
+            
+        }
+
+        @Override
+        public void remove( Node arg0, String arg1 )
+        {
+            // TODO Auto-generated method stub
+            
+        }
     }
 
     static class RelationshipIndex extends BerkeleyDbIndex<Relationship>
@@ -196,6 +210,20 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
         public Class<Relationship> getEntityType()
         {
             return Relationship.class;
+        }
+
+        @Override
+        public void remove( Relationship arg0 )
+        {
+            // TODO Auto-generated method stub
+            
+        }
+
+        @Override
+        public void remove( Relationship arg0, String arg1 )
+        {
+            // TODO Auto-generated method stub
+            
         }
     }
 }
