@@ -73,13 +73,13 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
     {
         BerkeleyDbXaConnection connection = getReadOnlyConnection();
         BerkeleydbTransaction tx = connection != null ? connection.getTx() : null;
-        Collection<Long> added = tx != null ? tx.getAddedIds( this, key, value ) :
-                Collections.<Long>emptyList();
-        Collection<Long> removed = tx != null ? tx.getRemovedIds( this, key, value ) :
-                Collections.<Long>emptyList();
+//        Collection<Long> added = tx != null ? tx.getAddedIds( this, key, value ) :
+//                Collections.<Long>emptyList();
+//        Collection<Long> removed = tx != null ? tx.getRemovedIds( this, key, value ) :
+//                Collections.<Long>emptyList();
         service.dataSource().getReadLock();
         Database db = service.dataSource().getDatabase( identifier, key );
-        List<Long> ids = new ArrayList<Long>( added );
+        List<Long> ids = new ArrayList<Long>(  );
         try
 
         {
@@ -103,7 +103,6 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
             service.dataSource().releaseReadLock();
         }
 
-        ids.removeAll( removed );
         Iterator<T> entities = new IteratorWrapper<T, Long>( ids.iterator() )
         {
             @Override
