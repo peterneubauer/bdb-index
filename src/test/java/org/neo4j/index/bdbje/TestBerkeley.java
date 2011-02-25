@@ -41,13 +41,13 @@ public class TestBerkeley extends Neo4jTestCase
         Node node2 = graphDb().createNode();
         index.add( node1, "name", "Mattias" );
         index.add( node1, "node_osm_id", 123 );
-        assertFalse( index.get( "name", "Mattias" ).hasNext() );
-        assertFalse( index.get( "node_osm_id", 123 ).hasNext() );
+        assertContains( index.get( "name", "Mattias" ), node1 );
+        assertContains( index.get( "node_osm_id", 123 ), node1 );
         restartTx();
         assertContains( index.get( "name", "Mattias" ), node1 );
         assertContains( index.get( "node_osm_id", 123 ), node1 );
         index.add( node2, "name", "Mattias" );
-        assertContains( index.get( "name", "Mattias" ), node1 );
+        assertContains( index.get( "name", "Mattias" ), node1, node2 );
         restartTx();
         assertContains( index.get( "name", "Mattias" ), node1, node2 );
 

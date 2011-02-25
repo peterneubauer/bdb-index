@@ -31,6 +31,9 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.helpers.collection.IteratorWrapper;
+import org.neo4j.index.bdbje.BerkeleyDbCommand.AddCommand;
+import org.neo4j.index.bdbje.BerkeleyDbCommand.CreateCommand;
+import org.neo4j.index.bdbje.BerkeleyDbCommand.RemoveCommand;
 import org.neo4j.kernel.impl.core.ReadOnlyDbException;
 
 import com.sleepycat.je.Database;
@@ -64,9 +67,18 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
                 service.broker().acquireReadOnlyResourceConnection();
     }
 
+    
     public void add( T entity, String key, Object value )
     {
-        getConnection().add( this, entity, key, value );
+        //getConnection().add( this, entity, key, value );
+        
+        //directly commit stuff, no TX caching
+            Database db = service.dataSource().getDatabase( identifier, key );
+            List<Long> ids = new ArrayList<Long>(  );
+            if(entity instanceof Node) {
+                ids.add( ((Node)entity).getId());
+                service.dataSource().addEntry( db, identifier, ArrayUtil.toPrimitiveLongArray( ids ), key, value.toString() );
+            }
     }
 
     public IndexHits<T> get( String key, Object value )
