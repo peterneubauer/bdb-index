@@ -377,4 +377,10 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource
             throw new RuntimeException( e );
         }
     }
+
+    public Map<IndexIdentifier, Map<String, Database>> getDatabases()
+    {
+        return this.databases;
+        
+    }
 }

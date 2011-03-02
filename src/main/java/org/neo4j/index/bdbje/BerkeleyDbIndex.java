@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PropertyContainer;
@@ -83,8 +84,8 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 
     public IndexHits<T> get( String key, Object value )
     {
-        BerkeleyDbXaConnection connection = getReadOnlyConnection();
-        BerkeleydbTransaction tx = connection != null ? connection.getTx() : null;
+//        BerkeleyDbXaConnection connection = getReadOnlyConnection();
+//        BerkeleydbTransaction tx = connection != null ? connection.getTx() : null;
 //        Collection<Long> added = tx != null ? tx.getAddedIds( this, key, value ) :
 //                Collections.<Long>emptyList();
 //        Collection<Long> removed = tx != null ? tx.getRemovedIds( this, key, value ) :
@@ -155,7 +156,12 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 
     public void delete()
     {
-        throw new UnsupportedOperationException();
+        for (Map<String, Database> dbs : service.dataSource().getDatabases().values()) {
+            for (Database db : dbs.values()) {
+                db.close();
+                db.getEnvironment().close();
+            }
+        }
     }
 
     static class NodeIndex extends BerkeleyDbIndex<Node>
