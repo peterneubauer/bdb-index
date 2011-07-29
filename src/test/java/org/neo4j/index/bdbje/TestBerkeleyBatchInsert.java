@@ -28,6 +28,7 @@ import java.util.Map;
 
 import junit.framework.Assert;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -49,17 +50,23 @@ public class TestBerkeleyBatchInsert extends Neo4jTestCase
 {
     private static final String PATH = "target/var/batch";
     private static final int MAX = 1000000;
-
+private BatchInserter inserter;
     @Before
     public void cleanDirectory()
     {
         Neo4jTestCase.deleteFileOrDirectory( new File( PATH ) );
+        inserter = new BatchInserterImpl( PATH );
     }
 
+    @After
+    public void tearDown(){
+    	inserter.shutdown();
+    }
+    
     @Test
     public void testSome() throws Exception
     {
-        BatchInserter inserter = new BatchInserterImpl( PATH );
+        
         BatchInserterIndexProvider provider = new BerkeleyDbBatchInserterIndexProvider(
                 inserter );
         BatchInserterIndex index = provider.nodeIndex( "users",
@@ -104,7 +111,7 @@ public class TestBerkeleyBatchInsert extends Neo4jTestCase
     @Test
     public void testInsertionSpeed()
     {
-        BatchInserter inserter = new BatchInserterImpl( PATH );
+//        BatchInserter inserter = new BatchInserterImpl( PATH );
         BatchInserterIndexProvider provider = new BerkeleyDbBatchInserterIndexProvider(
                 inserter );
         BatchInserterIndex index = provider.nodeIndex( "yeah",
@@ -132,7 +139,7 @@ public class TestBerkeleyBatchInsert extends Neo4jTestCase
     public void testFindCreatedIndex()
     {
         String indexName = "persons";
-        BatchInserter inserter = new BatchInserterImpl( PATH );
+//        BatchInserter inserter = new BatchInserterImpl( PATH );
         BerkeleyDbBatchInserterIndexProvider indexProvider = new BerkeleyDbBatchInserterIndexProvider(
                 inserter );
         BatchInserterIndex persons = indexProvider.nodeIndex( "persons",
@@ -165,7 +172,7 @@ public class TestBerkeleyBatchInsert extends Neo4jTestCase
     @Test
     public void testCanIndexRelationships()
     {
-        BatchInserter inserter = new BatchInserterImpl( PATH );
+//        BatchInserter inserter = new BatchInserterImpl( PATH );
         BatchInserterIndexProvider indexProvider = new BerkeleyDbBatchInserterIndexProvider(
                 inserter );
         BatchInserterIndex edgesIndex = indexProvider.relationshipIndex(
@@ -185,6 +192,7 @@ public class TestBerkeleyBatchInsert extends Neo4jTestCase
                 String.format( "Should return relationship id" ),
                 new Long( relationshipId ),
                 edgesIndex.query( "EDGE_TYPE", EdgeType.KNOWS.name() ).getSingle() );
+        //FIXME: fails on above line
 
         indexProvider.shutdown();
         inserter.shutdown();
