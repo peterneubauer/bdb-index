@@ -57,7 +57,7 @@ public class RawBDBSpeed {
 		bdb = environment.openDatabase( null, DB_NAME, databaseConfig );
 		
 		long t = System.currentTimeMillis();
-		int max = 500000;
+		int max = 50000000;
 		for ( int i = 0; i < max; i++ ) {
 			DatabaseEntry keyEntry = new DatabaseEntry();// key.getBytes() );
 			// StringBinding.stringToEntry( key, keyEntry );
