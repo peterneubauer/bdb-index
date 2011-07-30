@@ -159,7 +159,14 @@ public class BerkeleyDbBatchInserterIndex implements BatchInserterIndex {
 	
 	
 	public void shutdown() {
-		System.err.println( "shutting down " + identifier );
+		System.err.println( "shutting down batch inserter index: " + identifier );
+		for ( Database db : dbs.values() ) {
+			if ( db.getEnvironment().isValid() ) {
+				System.err.println( "bdb environ closing:" + db.getEnvironment().getHome() );
+				db.close();
+				db.getEnvironment().close();
+			}
+		}
 	}
 	
 	

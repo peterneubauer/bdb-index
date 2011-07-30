@@ -72,59 +72,69 @@ public class TestBerkeleyBatchInsert extends Neo4jTestCase {
 	public void testSome() throws Exception {
 		
 		BatchInserterIndexProvider provider = new BerkeleyDbBatchInserterIndexProvider( inserter );
-		BatchInserterIndex index = provider.nodeIndex( "users", BerkeleyDbIndexImplementation.DEFAULT_CONFIG );
-		for ( int i = 0; i < MAX; i++ ) {
-			if ( ( 1 + i ) % 100000 == 0 ) {
-				// restartTx();
-				System.out.println( 1 + i );
+		try {
+			BatchInserterIndex index = provider.nodeIndex( "users", BerkeleyDbIndexImplementation.DEFAULT_CONFIG );
+			for ( int i = 0; i < MAX; i++ ) {
+				if ( ( 1 + i ) % 100000 == 0 ) {
+					// restartTx();
+					System.out.println( 1 + i );
+				}
+				inserter.createNode( null );
+				index.add( i, MapUtil.map( "name", "Joe" + i, "other", "Schmoe" ) );
+				// ids.put( i, id );
 			}
-			inserter.createNode( null );
-			index.add( i, MapUtil.map( "name", "Joe" + i, "other", "Schmoe" ) );
-			// ids.put( i, id );
-		}
-		
-		for ( int i = 0; i < MAX; i++ ) {
-			if ( i % 100000 == 0 ) {
-				// restartTx();
-				System.out.println( i );
+			
+			for ( int i = 0; i < MAX; i++ ) {
+				if ( i % 100000 == 0 ) {
+					// restartTx();
+					System.out.println( i );
+				}
+				int key = (int)Math.floor( Math.random() * MAX );
+				assertEquals( key + "", index.get( "name", "Joe" + key ).getSingle().toString() );
 			}
-			int key = (int)Math.floor( Math.random() * MAX );
-			assertEquals( key + "", index.get( "name", "Joe" + key ).getSingle().toString() );
+		} finally {
+			provider.shutdown();
+			inserter.shutdown();
 		}
-		provider.shutdown();
-		inserter.shutdown();
 		
 		GraphDatabaseService db = new EmbeddedGraphDatabase( PATH );
-		assertTrue( db.index().existsForNodes( "users" ) );
-		Index<Node> dbIndex = db.index().forNodes( "users" );
-		for ( int i = 0; i < 100; i++ ) {
-			assertEquals( i, dbIndex.get( "name", "Joe" + i ).getSingle().getId() );
+		try {
+			assertTrue( db.index().existsForNodes( "users" ) );
+			Index<Node> dbIndex = db.index().forNodes( "users" );
+			for ( int i = 0; i < 100; i++ ) {
+				assertEquals( i, dbIndex.get( "name", "Joe" + i ).getSingle().getId() );
+			}
+		} finally {
+			db.shutdown();
 		}
-		db.shutdown();
 	}
 	
 	
-	@Ignore
+	// @Ignore
 	@Test
 	public void testInsertionSpeed() {
 		// BatchInserter inserter = new BatchInserterImpl( PATH );
 		BatchInserterIndexProvider provider = new BerkeleyDbBatchInserterIndexProvider( inserter );
-		BatchInserterIndex index = provider.nodeIndex( "yeah", BerkeleyDbIndexImplementation.DEFAULT_CONFIG );
-		index.setCacheCapacity( "key", 1000000 );
-		long t = System.currentTimeMillis();
-		for ( int i = 0; i < 1000000; i++ ) {
-			Map<String, Object> properties = MapUtil.map( "key", "value" + i );
-			long id = inserter.createNode( properties );
-			index.add( id, properties );
+		try {
+			BatchInserterIndex index = provider.nodeIndex( "yeah", BerkeleyDbIndexImplementation.DEFAULT_CONFIG );
+			index.setCacheCapacity( "key", 1000000 );
+			long t = System.currentTimeMillis();
+			for ( int i = 0; i < 1000000; i++ ) {
+				Map<String, Object> properties = MapUtil.map( "key", "value" + i );
+				long id = inserter.createNode( properties );
+				index.add( id, properties );
+			}
+			System.out.println( "insert:" + ( System.currentTimeMillis() - t ) );
+			index.flush();
+			
+			t = System.currentTimeMillis();
+			for ( int i = 0; i < 1000000; i++ ) {
+				IteratorUtil.count( (Iterator<Long>)index.get( "key", "value" + i ) );
+			}
+			System.out.println( "get:" + ( System.currentTimeMillis() - t ) );
+		} finally {
+			provider.shutdown();
 		}
-		System.out.println( "insert:" + ( System.currentTimeMillis() - t ) );
-		index.flush();
-		
-		t = System.currentTimeMillis();
-		for ( int i = 0; i < 1000000; i++ ) {
-			IteratorUtil.count( (Iterator<Long>)index.get( "key", "value" + i ) );
-		}
-		System.out.println( "get:" + ( System.currentTimeMillis() - t ) );
 	}
 	
 	
@@ -133,11 +143,14 @@ public class TestBerkeleyBatchInsert extends Neo4jTestCase {
 		String indexName = "persons";
 		// BatchInserter inserter = new BatchInserterImpl( PATH );
 		BerkeleyDbBatchInserterIndexProvider indexProvider = new BerkeleyDbBatchInserterIndexProvider( inserter );
-		BatchInserterIndex persons = indexProvider.nodeIndex( "persons", BerkeleyDbIndexImplementation.DEFAULT_CONFIG );
-		Map<String, Object> properties = MapUtil.map( "name", "test" );
-		long node = inserter.createNode( properties );
-		persons.add( node, properties );
-		indexProvider.shutdown();
+		try {
+			BatchInserterIndex persons = indexProvider.nodeIndex( "persons", BerkeleyDbIndexImplementation.DEFAULT_CONFIG );
+			Map<String, Object> properties = MapUtil.map( "name", "test" );
+			long node = inserter.createNode( properties );
+			persons.add( node, properties );
+		} finally {
+			indexProvider.shutdown();
+		}
 		inserter.shutdown();
 		GraphDatabaseService graphDb = new EmbeddedGraphDatabase( PATH );
 		Transaction tx = graphDb.beginTx();

@@ -143,7 +143,10 @@ public abstract class Neo4jTestCase {
 			}
 		}
 		boolean ret = file.delete();
-		assert ret : file.getAbsoluteFile();
+		// System.out.println( file.getName() );
+		// ignoring messages.log and all its parent dirs
+		assert ( ret ) || ( ( !ret ) && ( file.isDirectory() || file.getName().equals( "messages.log" ) ) ) : "failed to delete file: "
+			+ file.getAbsoluteFile();
 	}
 	
 	

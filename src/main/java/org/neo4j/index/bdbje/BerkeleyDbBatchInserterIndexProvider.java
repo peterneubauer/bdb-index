@@ -98,6 +98,7 @@ public class BerkeleyDbBatchInserterIndexProvider implements BatchInserterIndexP
 	
 	@Override
 	public void shutdown() {
+		System.err.println( "org.neo4j.index.bdbje.BerkeleyDbBatchInserterIndexProvider.shutdown()" );
 		for ( BerkeleyDbBatchInserterIndex index : indexes.values() ) {
 			index.shutdown();
 		}
