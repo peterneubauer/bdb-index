@@ -136,6 +136,9 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource {
 			return;
 		}
 		// TODO
+		if ( null != xaContainer ) {
+			xaContainer.close();
+		}
 		store.close();
 		try {
 			// berkeleyDb.close();

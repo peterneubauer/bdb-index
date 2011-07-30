@@ -20,14 +20,16 @@
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.neo4j.index.bdbje.TestBerkeley;
+import org.neo4j.index.bdbje.TestBerkeleyBatchInsert;
 
 
 
 @RunWith( Suite.class )
 @Suite.SuiteClasses(
 		value = {
-			TestBerkeley.class, TestBerkeley.class,
-		// TestBerkeleyBatchInsert.class
+			TestBerkeley.class,
+			// TestBerkeley.class,
+			TestBerkeleyBatchInsert.class
 		} )
 public class AllTests {
 	// always empty
