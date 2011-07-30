@@ -48,7 +48,7 @@ public abstract class Neo4jTestCase {
 	
 	@BeforeClass
 	public static void setUpDb() throws Exception {
-		System.err.println( "@BeforeClass" );
+		// System.err.println( "@BeforeClass" );
 		assert null == graphDb;
 		deleteFileOrDirectory( dbPath );
 		graphDb = new EmbeddedGraphDatabase( dbPath.getAbsolutePath() );
@@ -57,7 +57,7 @@ public abstract class Neo4jTestCase {
 	
 	@AfterClass
 	public static void tearDownDb() throws Exception {
-		System.err.println( "@AfterClass" );
+		// System.err.println( "@AfterClass" );
 		graphDb.shutdown();
 		graphDb = null;
 		deleteFileOrDirectory( dbPath );
@@ -66,14 +66,14 @@ public abstract class Neo4jTestCase {
 	
 	@Before
 	public void setUpTest() {
-		System.err.println( "@Before " + this.getClass() );
+		// System.err.println( "@Before " + this.getClass() );
 		tx = graphDb.beginTx();
 	}
 	
 	
 	@After
 	public void tearDownTest() {
-		System.err.println( "@After " + this.getClass() );
+		// System.err.println( "@After " + this.getClass() );
 		if ( !manageMyOwnTxFinish() ) {
 			finishTx( true );
 		}
@@ -83,22 +83,6 @@ public abstract class Neo4jTestCase {
 	protected boolean manageMyOwnTxFinish() {
 		return false;
 	}
-	
-	
-	// protected void success() {
-	// tx.success();
-	// }
-	//
-	//
-	// protected void failure() {
-	// tx.failure();
-	// }
-	//
-	//
-	// protected void finish() {
-	// tx.finish();
-	// tx = null;
-	// }
 	
 	
 	protected void finishTx( boolean commit ) {
