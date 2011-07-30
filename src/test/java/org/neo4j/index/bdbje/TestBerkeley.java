@@ -32,67 +32,67 @@ import org.neo4j.helpers.collection.MapUtil;
 
 public class TestBerkeley extends Neo4jTestCase {
 	
-	@Override
-	protected boolean manageMyOwnTxFinish() {
-		return true;
-	}
+	// @Override
+	// protected boolean manageMyOwnTxFinish() {
+	// return true;
+	// }
 	
 	
 	@Test
 	public void testIt() throws Exception {
 		Index<Node> index = graphDb().index().forNodes( "fast", BerkeleyDbIndexImplementation.DEFAULT_CONFIG );
-		try {
-			Node node1 = graphDb().createNode();
-			Node node2 = graphDb().createNode();
-			index.add( node1, "name", "Mattias" );
-			index.add( node1, "node_osm_id", 123 );
-			assertContains( index.get( "name", "Mattias" ), node1 );
-			assertContains( index.get( "node_osm_id", 123 ), node1 );
-			restartTx();
-			assertContains( index.get( "name", "Mattias" ), node1 );
-			assertContains( index.get( "node_osm_id", 123 ), node1 );
-			index.add( node2, "name", "Mattias" );
-			assertContains( index.get( "name", "Mattias" ), node1, node2 );
-			restartTx();
-			assertContains( index.get( "name", "Mattias" ), node1, node2 );
-			
-			index.remove( node1, "name", "Mattias" );
-			// this should be better implemented
-			assertContains( index.get( "name", "Mattias" ), node1, node2 );
-			restartTx();
-			assertContains( index.get( "name", "Mattias" ), node2 );
-			index.remove( node2, "name", "Mattias" );
-			assertContains( index.get( "name", "Mattias" ), node2 );
-			node1.delete();
-			node2.delete();
-			
-			success();
-		} finally {
-			finish();
-			index.delete();
-		}
+		// try {
+		Node node1 = graphDb().createNode();
+		Node node2 = graphDb().createNode();
+		index.add( node1, "name", "Mattias" );
+		index.add( node1, "node_osm_id", 123 );
+		assertContains( index.get( "name", "Mattias" ), node1 );
+		assertContains( index.get( "node_osm_id", 123 ), node1 );
+		restartTx();
+		assertContains( index.get( "name", "Mattias" ), node1 );
+		assertContains( index.get( "node_osm_id", 123 ), node1 );
+		index.add( node2, "name", "Mattias" );
+		assertContains( index.get( "name", "Mattias" ), node1, node2 );
+		restartTx();
+		assertContains( index.get( "name", "Mattias" ), node1, node2 );
+		
+		index.remove( node1, "name", "Mattias" );
+		// this should be better implemented
+		assertContains( index.get( "name", "Mattias" ), node1, node2 );
+		restartTx();
+		assertContains( index.get( "name", "Mattias" ), node2 );
+		index.remove( node2, "name", "Mattias" );
+		assertContains( index.get( "name", "Mattias" ), node2 );
+		node1.delete();
+		node2.delete();
+		
+		// success();
+		// } finally {
+		// finish();
+		// index.delete();
+		// }
 	}
 	
 	
 	@Test
 	public void testInsertSome() {
 		Index<Node> index = graphDb().index().forNodes( "fast", MapUtil.stringMap( "provider", "berkeleydb-je" ) );
-		try {
-			for ( int i = 0; i < 10000; i++ ) {
-				Node node = graphDb().createNode();
-				index.add( node, "yeah", "some long value " + ( i % 500 ) );
-			}
-			restartTx( true );
-			
-			for ( int i = 0; i < 500; i++ ) {
-				IndexHits<Node> hits = index.get( "yeah", "some long value " + i );
-				assertEquals( 20, hits.size() );
-			}
-			success();
-		} finally {
-			finish();
-			index.delete();
+		// try {
+		for ( int i = 0; i < 10000; i++ ) {
+			Node node = graphDb().createNode();
+			index.add( node, "yeah", "some long value " + ( i % 500 ) );
 		}
+		restartTx( true );
+		
+		for ( int i = 0; i < 500; i++ ) {
+			IndexHits<Node> hits = index.get( "yeah", "some long value " + i );
+			assertEquals( 20, hits.size() );
+		}
+		// success();
+		// } finally {
+		// finish();
+		// index.delete();
+		// }
 	}
 	
 	

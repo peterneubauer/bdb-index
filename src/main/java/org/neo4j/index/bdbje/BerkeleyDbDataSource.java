@@ -131,6 +131,7 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource {
 	
 	@Override
 	public void close() {
+		System.err.println( "close of " + this.getClass() );
 		if ( closed ) {
 			return;
 		}
@@ -138,6 +139,15 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource {
 		store.close();
 		try {
 			// berkeleyDb.close();
+			for ( Map<String, Database> dbs : databases.values() ) {
+				for ( Database db : dbs.values() ) {
+					if ( db.getEnvironment().isValid() ) {
+						System.err.println( "bdb environ closing:" + db.getEnvironment().getHome() );
+						db.close();
+						db.getEnvironment().close();
+					}
+				}
+			}
 		} catch ( Exception e ) {
 			e.printStackTrace();
 		}
