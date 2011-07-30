@@ -85,6 +85,22 @@ public abstract class Neo4jTestCase {
 	}
 	
 	
+	protected void success() {
+		tx.success();
+	}
+	
+	
+	protected void failure() {
+		tx.failure();
+	}
+	
+	
+	protected void finish() {
+		tx.finish();
+		tx = null;
+	}
+	
+	
 	protected void finishTx( boolean commit ) {
 		if ( tx == null ) {
 			return;
