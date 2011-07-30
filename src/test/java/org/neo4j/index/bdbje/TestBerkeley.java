@@ -60,6 +60,7 @@ public class TestBerkeley extends Neo4jTestCase
         assertContains( index.get( "name", "Mattias" ), node2 );
         node1.delete();
         node2.delete();
+        
     }
 
     @Test

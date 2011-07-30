@@ -42,6 +42,7 @@ public class RawBDBSpeed {
 	
 	
 	public static void main( String[] args ) throws Exception {
+		System.err.println("main in "+RawBDBSpeed.class);
 		File bdbDir = new File( BDB );
 		
 		deleteFileOrDirectory( bdbDir );
