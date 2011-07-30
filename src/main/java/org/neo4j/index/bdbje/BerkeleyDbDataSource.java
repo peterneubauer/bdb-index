@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.neo4j.helpers.Pair;
-import org.neo4j.index.lucene.LuceneIndexProvider;
 import org.neo4j.kernel.impl.index.IndexProviderStore;
 import org.neo4j.kernel.impl.index.IndexStore;
 import org.neo4j.kernel.impl.transaction.xaframework.LogBackedXaDataSource;

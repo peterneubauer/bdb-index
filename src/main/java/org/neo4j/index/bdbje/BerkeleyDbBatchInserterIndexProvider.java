@@ -29,7 +29,6 @@ import org.neo4j.graphdb.index.BatchInserterIndex;
 import org.neo4j.graphdb.index.BatchInserterIndexProvider;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.helpers.collection.MapUtil;
-import org.neo4j.index.lucene.LuceneIndexProvider;
 import org.neo4j.kernel.impl.batchinsert.BatchInserter;
 import org.neo4j.kernel.impl.batchinsert.BatchInserterImpl;
 import org.neo4j.kernel.impl.index.IndexStore;
