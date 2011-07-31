@@ -1,5 +1,7 @@
-#Sat Jul 30 20:44:57 CEST 2011
+#Sun Jul 31 03:02:57 CEST 2011
 eclipse.preferences.version=1
+org.eclipse.jdt.core.compiler.codegen.targetPlatform=1.6
+org.eclipse.jdt.core.compiler.compliance=1.6
 org.eclipse.jdt.core.compiler.problem.annotationSuperInterface=warning
 org.eclipse.jdt.core.compiler.problem.autoboxing=warning
 org.eclipse.jdt.core.compiler.problem.comparingIdentical=error
@@ -14,7 +16,7 @@ org.eclipse.jdt.core.compiler.problem.fatalOptionalError=disabled
 org.eclipse.jdt.core.compiler.problem.fieldHiding=warning
 org.eclipse.jdt.core.compiler.problem.finalParameterBound=warning
 org.eclipse.jdt.core.compiler.problem.finallyBlockNotCompletingNormally=error
-org.eclipse.jdt.core.compiler.problem.forbiddenReference=error
+org.eclipse.jdt.core.compiler.problem.forbiddenReference=warning
 org.eclipse.jdt.core.compiler.problem.hiddenCatchBlock=error
 org.eclipse.jdt.core.compiler.problem.includeNullInfoFromAsserts=disabled
 org.eclipse.jdt.core.compiler.problem.incompatibleNonInheritedInterfaceMethod=warning
@@ -69,3 +71,4 @@ org.eclipse.jdt.core.compiler.problem.unusedParameterWhenOverridingConcrete=disa
 org.eclipse.jdt.core.compiler.problem.unusedPrivateMember=warning
 org.eclipse.jdt.core.compiler.problem.unusedWarningToken=warning
 org.eclipse.jdt.core.compiler.problem.varargsArgumentNeedCast=error
+org.eclipse.jdt.core.compiler.source=1.6
