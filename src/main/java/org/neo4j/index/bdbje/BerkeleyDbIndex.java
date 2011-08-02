@@ -201,6 +201,13 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 			// TODO Auto-generated method stub
 			
 		}
+		
+		
+		@Override
+		public boolean isWriteable() {
+			// TODO Auto-generated method stub
+			return false;
+		}
 	}
 	
 	static class RelationshipIndex extends BerkeleyDbIndex<Relationship> {
@@ -239,6 +246,13 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 		public void remove( Relationship arg0, String arg1 ) {
 			// TODO Auto-generated method stub
 			
+		}
+		
+		
+		@Override
+		public boolean isWriteable() {
+			// TODO Auto-generated method stub
+			return false;
 		}
 	}
 }
