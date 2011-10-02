@@ -55,298 +55,299 @@ import com.sleepycat.je.LockMode;
  * class is public because the XA framework requires it.
  */
 public class BerkeleyDbDataSource extends LogBackedXaDataSource {
-	
-	public static final String									DEFAULT_NAME		= "bdb";
-	public static final byte[]									DEFAULT_BRANCH_ID	= "231564".getBytes();
-	
-	private final XaContainer									xaContainer;
-	private final String										baseStorePath;
-	private final ReentrantReadWriteLock						lock				= new ReentrantReadWriteLock();
-	final IndexStore											indexStore;
-	final IndexProviderStore									store;
-	private boolean												closed;
-	
-	private final Map<IndexIdentifier, Map<String, Database>>	databases			=
-			new HashMap<IndexIdentifier, Map<String, Database>>();
-	
-	
-	/**
-	 * Constructs this data source.
-	 * 
-	 * @param params
-	 *            XA parameters.
-	 * @throws InstantiationException
-	 *             if the data source couldn't be
-	 *             instantiated
-	 */
-	public BerkeleyDbDataSource( Map<Object, Object> params ) throws InstantiationException {
-		super( params );
-		String storeDir = (String)params.get( "store_dir" );
-		baseStorePath = getStoreDir( storeDir ).first();
-		indexStore = (IndexStore)params.get( IndexStore.class );
-		store = newIndexStore( storeDir );
-		boolean isReadOnly = params.containsKey( "read_only" ) ? (Boolean)params.get( "read_only" ) : false;
-		
-		if ( !isReadOnly ) {
-			XaCommandFactory cf = new BerkeleyDbCommandFactory();
-			XaTransactionFactory tf = new BerkeleyDbTransactionFactory();
-			xaContainer = XaContainer.create( this, baseStorePath + "/logical.log", cf, tf, params );
-			try {
-				xaContainer.openLogicalLog();
-			} catch ( IOException e ) {
-				throw new RuntimeException( "Unable to open bekeleydb log in " + baseStorePath, e );
-			}
-			
-			xaContainer.getLogicalLog().setKeepLogs( shouldKeepLog( (String)params.get( "keep_logical_logs" ), DEFAULT_NAME ) );
-			setLogicalLogAtCreationTime( xaContainer.getLogicalLog() );
-		} else {
-			xaContainer = null;
-		}
-		
-	}
-	
-	
-	static Pair<String, Boolean> getStoreDir( String dbStoreDir ) {
-		File dir = new File( dbStoreDir );
-		boolean created = false;
-		if ( !dir.exists() ) {
-			if ( !dir.mkdirs() ) {
-				throw new RuntimeException( "Unable to create directory path[" + dir.getAbsolutePath() + "] for Neo4j store." );
-			}
-			created = true;
-		}
-		if ( dir.list().length == 0 ) {
-			created = true;
-		}
-		return Pair.of( dir.getAbsolutePath(), created );
-	}
-	
-	
-	static IndexProviderStore newIndexStore( String dbStoreDir ) {
-		// FIXME: is this really correct? doesn't seem safe...
-		return new IndexProviderStore( new File( dbStoreDir, "store.db" ) );
-	}
-	
-	
-	@Override
-	public void close() {
-		System.err.println( "close of " + this.getClass() );
-		if ( closed ) {
-			return;
-		}
-		// TODO
-		if ( null != xaContainer ) {
-			xaContainer.close();
-		}
-		store.close();
-		try {
-			// berkeleyDb.close();
-			for ( Map<String, Database> dbs : databases.values() ) {
-				for ( Database db : dbs.values() ) {
-					if ( db.getEnvironment().isValid() ) {
-						System.err.println( "bdb environ closing:" + db.getEnvironment().getHome() );
-						db.close();
-						db.getEnvironment().close();
-					}
-				}
-			}
-		} catch ( Exception e ) {
-			e.printStackTrace();
-		}
-		closed = true;
-	}
-	
-	
-	@Override
-	public XaConnection getXaConnection() {
-		return new BerkeleyDbXaConnection( baseStorePath, xaContainer.getResourceManager(), getBranchId() );
-	}
-	
-	private class BerkeleyDbCommandFactory extends XaCommandFactory {
-		
-		BerkeleyDbCommandFactory() {
-			super();
-		}
-		
-		
-		@Override
-		public XaCommand readCommand( ReadableByteChannel channel, ByteBuffer buffer ) throws IOException {
-			return BerkeleyDbCommand.readCommand( channel, buffer, BerkeleyDbDataSource.this );
-		}
-	}
-	
-	private class BerkeleyDbTransactionFactory extends XaTransactionFactory {
-		
-		@Override
-		public XaTransaction create( int identifier ) {
-			return createTransaction( identifier, this.getLogicalLog() );
-		}
-		
-		
-		@Override
-		public void flushAll() {
-			// Not much we can do...
-		}
-		
-		
-		@Override
-		public long getCurrentVersion() {
-			return store.getVersion();
-		}
-		
-		
-		@Override
-		public long getAndSetNewVersion() {
-			return store.incrementVersion();
-		}
-		
-		
-		@Override
-		public long getLastCommittedTx() {
-			return store.getLastCommittedTx();
-		}
-	}
-	
-	
-	void getReadLock() {
-		lock.readLock().lock();
-	}
-	
-	
-	void releaseReadLock() {
-		lock.readLock().unlock();
-	}
-	
-	
-	void getWriteLock() {
-		lock.writeLock().lock();
-	}
-	
-	
-	void releaseWriteLock() {
-		lock.writeLock().unlock();
-	}
-	
-	
-	XaTransaction createTransaction( int identifier, XaLogicalLog logicalLog ) {
-		return new BerkeleydbTransaction( identifier, logicalLog, this );
-	}
-	
-	
-	@Override
-	public long getCreationTime() {
-		return store.getCreationTime();
-	}
-	
-	
-	@Override
-	public long getRandomIdentifier() {
-		return store.getRandomNumber();
-	}
-	
-	
-	@Override
-	public long getCurrentLogVersion() {
-		return store.getVersion();
-	}
-	
-	
-	public static byte[] indexKey( String key, Object value ) {
-		return String.valueOf( "" + value ).getBytes();
-	}
-	
-	
-	public Database getDatabase( IndexIdentifier identifier, Object key ) {
-		Map<String, Database> db = databases.get( identifier );
-		if ( null == db ) {
-			db = new HashMap<String, Database>();
-			databases.put( identifier, db );
-		}
-		Database result = db.get( key.toString() );
-		if ( null == result ) {
-			result = createDB( identifier, key );
-			db.put( key.toString(), result );
-		}
-		
-		return result;
-	}
-	
-	
-	public void addEntry( Database db, IndexIdentifier identifier, long[] entityIds, String key, String value ) {
-		byte[] indexKey = indexKey( key, value );
-		long[] existingIds = getExistingIds( db, indexKey );
-		long[] ids = ArrayUtil.include( existingIds, entityIds );
-		try {
-			db.put( null, new DatabaseEntry( indexKey ), new DatabaseEntry( ArrayUtil.toBytes( ids ) ) );
-		} catch ( DatabaseException e ) {
-			e.printStackTrace();
-		}
-	}
-	
-	
-	private long[] getExistingIds( Database db, byte[] key ) {
-		try {
-			DatabaseEntry value = new DatabaseEntry();
-			db.get( null, new DatabaseEntry( key ), value, LockMode.READ_UNCOMMITTED );
-			
-			return value.getData() != null ? ArrayUtil.toLongArray( value.getData() ) : new long[0];
-		} catch ( Exception e ) {
-			throw new RuntimeException( e );
-		}
-	}
-	
-	
-	public void removeEntry( Database db, IndexIdentifier identifier, long[] entityIds, String key, String value ) {
-		byte[] indexKey = indexKey( key, value );
-		long[] existingIds = getExistingIds( db, indexKey );
-		long[] ids = ArrayUtil.exclude( existingIds, entityIds );
-		if ( ids.length == 0 ) {
-			db.removeSequence( null, new DatabaseEntry( BerkeleyDbDataSource.indexKey( key, value ) ) );
-		} else {
-			db.put( null, new DatabaseEntry( BerkeleyDbDataSource.indexKey( key, value ) ),
-				new DatabaseEntry( ArrayUtil.toBytes( ids ) ) );
-		}
-	}
-	
-	
-	public void commit( Database db ) {
-		db.sync();
-	}
-	
-	
-	@Override
-	public long getLastCommittedTxId() {
-		return store.getLastCommittedTx();
-	}
-	
-	
-	private Database createDB( IndexIdentifier identifier, Object key ) {
-		try {
-			EnvironmentConfig environmentConfig = new EnvironmentConfig();
-			environmentConfig.setAllowCreate( true );
-			// environmentConfig.setConfigParam( "java.util.logging.level",
-			// "INFO" );
-			// perform other environment configurations
-			String dir =
-					BerkeleyDbDataSource.getStoreDir(
-						baseStorePath + "/index/bdb/" + identifier.itemClass.getSimpleName() + "/" + identifier.indexName + "/"
-								+ key ).first();
-			System.err.println( "bdb environ opening:" + dir );
-			Environment environment = new Environment( new File( dir ), environmentConfig );
-			environmentConfig.setTransactional( false );
-			DatabaseConfig databaseConfig = new DatabaseConfig();
-			databaseConfig.setAllowCreate( true );
-			// perform other database configurations
-			Database db = environment.openDatabase( null, key.toString(), databaseConfig );
-			return db;
-		} catch ( Exception e ) {
-			throw new RuntimeException( e );
-		}
-	}
-	
-	
-	public Map<IndexIdentifier, Map<String, Database>> getDatabases() {
-		return databases;
-		
-	}
+
+    public static final String									DEFAULT_NAME		= "bdb";
+    public static final byte[]									DEFAULT_BRANCH_ID	= "231564".getBytes();
+
+    private final XaContainer									xaContainer;
+    private final String										baseStorePath;
+    private final ReentrantReadWriteLock						lock				= new ReentrantReadWriteLock();
+    final IndexStore											indexStore;
+    final IndexProviderStore									store;
+    private boolean												closed;
+
+    private final Map<IndexIdentifier, Map<String, Database>>	databases			=
+            new HashMap<IndexIdentifier, Map<String, Database>>();
+
+
+    /**
+     * Constructs this data source.
+     * 
+     * @param params
+     *            XA parameters.
+     * @throws InstantiationException
+     *             if the data source couldn't be
+     *             instantiated
+     */
+    public BerkeleyDbDataSource( Map<Object, Object> params ) throws InstantiationException {
+        super( params );
+        String storeDir = (String)params.get( "store_dir" );
+        baseStorePath = getStoreDir( storeDir ).first();
+        indexStore = (IndexStore)params.get( IndexStore.class );
+        store = newIndexStore( storeDir );
+        boolean isReadOnly = params.containsKey( "read_only" ) ? (Boolean)params.get( "read_only" ) : false;
+
+        if ( !isReadOnly ) {
+            XaCommandFactory cf = new BerkeleyDbCommandFactory();
+            XaTransactionFactory tf = new BerkeleyDbTransactionFactory();
+            xaContainer = XaContainer.create( this, baseStorePath + "/logical.log", cf, tf, params );
+            try {
+                xaContainer.openLogicalLog();
+            } catch ( IOException e ) {
+                throw new RuntimeException( "Unable to open bekeleydb log in " + baseStorePath, e );
+            }
+
+            Object keep = params.get( "keep_logical_logs" );
+            xaContainer.getLogicalLog().setKeepLogs( shouldKeepLog( keep!=null?(String)keep:"false", DEFAULT_NAME ) );
+            setLogicalLogAtCreationTime( xaContainer.getLogicalLog() );
+        } else {
+            xaContainer = null;
+        }
+
+    }
+
+
+    static Pair<String, Boolean> getStoreDir( String dbStoreDir ) {
+        File dir = new File( dbStoreDir );
+        boolean created = false;
+        if ( !dir.exists() ) {
+            if ( !dir.mkdirs() ) {
+                throw new RuntimeException( "Unable to create directory path[" + dir.getAbsolutePath() + "] for Neo4j store." );
+            }
+            created = true;
+        }
+        if ( dir.list().length == 0 ) {
+            created = true;
+        }
+        return Pair.of( dir.getAbsolutePath(), created );
+    }
+
+
+    static IndexProviderStore newIndexStore( String dbStoreDir ) {
+        // FIXME: is this really correct? doesn't seem safe...
+        return new IndexProviderStore( new File( dbStoreDir, "store.db" ) );
+    }
+
+
+    @Override
+    public void close() {
+        System.err.println( "close of " + this.getClass() );
+        if ( closed ) {
+            return;
+        }
+        // TODO
+        if ( null != xaContainer ) {
+            xaContainer.close();
+        }
+        store.close();
+        try {
+            // berkeleyDb.close();
+            for ( Map<String, Database> dbs : databases.values() ) {
+                for ( Database db : dbs.values() ) {
+                    if ( db.getEnvironment().isValid() ) {
+                        System.err.println( "bdb environ closing:" + db.getEnvironment().getHome() );
+                        db.close();
+                        db.getEnvironment().close();
+                    }
+                }
+            }
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
+        closed = true;
+    }
+
+
+    @Override
+    public XaConnection getXaConnection() {
+        return new BerkeleyDbXaConnection( baseStorePath, xaContainer.getResourceManager(), getBranchId() );
+    }
+
+    private class BerkeleyDbCommandFactory extends XaCommandFactory {
+
+        BerkeleyDbCommandFactory() {
+            super();
+        }
+
+
+        @Override
+        public XaCommand readCommand( ReadableByteChannel channel, ByteBuffer buffer ) throws IOException {
+            return BerkeleyDbCommand.readCommand( channel, buffer, BerkeleyDbDataSource.this );
+        }
+    }
+
+    private class BerkeleyDbTransactionFactory extends XaTransactionFactory {
+
+        @Override
+        public XaTransaction create( int identifier ) {
+            return createTransaction( identifier, this.getLogicalLog() );
+        }
+
+
+        @Override
+        public void flushAll() {
+            // Not much we can do...
+        }
+
+
+        @Override
+        public long getCurrentVersion() {
+            return store.getVersion();
+        }
+
+
+        @Override
+        public long getAndSetNewVersion() {
+            return store.incrementVersion();
+        }
+
+
+        @Override
+        public long getLastCommittedTx() {
+            return store.getLastCommittedTx();
+        }
+    }
+
+
+    void getReadLock() {
+        lock.readLock().lock();
+    }
+
+
+    void releaseReadLock() {
+        lock.readLock().unlock();
+    }
+
+
+    void getWriteLock() {
+        lock.writeLock().lock();
+    }
+
+
+    void releaseWriteLock() {
+        lock.writeLock().unlock();
+    }
+
+
+    XaTransaction createTransaction( int identifier, XaLogicalLog logicalLog ) {
+        return new BerkeleydbTransaction( identifier, logicalLog, this );
+    }
+
+
+    @Override
+    public long getCreationTime() {
+        return store.getCreationTime();
+    }
+
+
+    @Override
+    public long getRandomIdentifier() {
+        return store.getRandomNumber();
+    }
+
+
+    @Override
+    public long getCurrentLogVersion() {
+        return store.getVersion();
+    }
+
+
+    public static byte[] indexKey( String key, Object value ) {
+        return String.valueOf( "" + value ).getBytes();
+    }
+
+
+    public Database getDatabase( IndexIdentifier identifier, Object key ) {
+        Map<String, Database> db = databases.get( identifier );
+        if ( null == db ) {
+            db = new HashMap<String, Database>();
+            databases.put( identifier, db );
+        }
+        Database result = db.get( key.toString() );
+        if ( null == result ) {
+            result = createDB( identifier, key );
+            db.put( key.toString(), result );
+        }
+
+        return result;
+    }
+
+
+    public void addEntry( Database db, IndexIdentifier identifier, long[] entityIds, String key, String value ) {
+        byte[] indexKey = indexKey( key, value );
+        long[] existingIds = getExistingIds( db, indexKey );
+        long[] ids = ArrayUtil.include( existingIds, entityIds );
+        try {
+            db.put( null, new DatabaseEntry( indexKey ), new DatabaseEntry( ArrayUtil.toBytes( ids ) ) );
+        } catch ( DatabaseException e ) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private long[] getExistingIds( Database db, byte[] key ) {
+        try {
+            DatabaseEntry value = new DatabaseEntry();
+            db.get( null, new DatabaseEntry( key ), value, LockMode.READ_UNCOMMITTED );
+
+            return value.getData() != null ? ArrayUtil.toLongArray( value.getData() ) : new long[0];
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+
+    public void removeEntry( Database db, IndexIdentifier identifier, long[] entityIds, String key, String value ) {
+        byte[] indexKey = indexKey( key, value );
+        long[] existingIds = getExistingIds( db, indexKey );
+        long[] ids = ArrayUtil.exclude( existingIds, entityIds );
+        if ( ids.length == 0 ) {
+            db.removeSequence( null, new DatabaseEntry( BerkeleyDbDataSource.indexKey( key, value ) ) );
+        } else {
+            db.put( null, new DatabaseEntry( BerkeleyDbDataSource.indexKey( key, value ) ),
+                    new DatabaseEntry( ArrayUtil.toBytes( ids ) ) );
+        }
+    }
+
+
+    public void commit( Database db ) {
+        db.sync();
+    }
+
+
+    @Override
+    public long getLastCommittedTxId() {
+        return store.getLastCommittedTx();
+    }
+
+
+    private Database createDB( IndexIdentifier identifier, Object key ) {
+        try {
+            EnvironmentConfig environmentConfig = new EnvironmentConfig();
+            environmentConfig.setAllowCreate( true );
+            // environmentConfig.setConfigParam( "java.util.logging.level",
+            // "INFO" );
+            // perform other environment configurations
+            String dir =
+                    BerkeleyDbDataSource.getStoreDir(
+                            baseStorePath + "/index/bdb/" + identifier.itemClass.getSimpleName() + "/" + identifier.indexName + "/"
+                                    + key ).first();
+            System.err.println( "bdb environ opening:" + dir );
+            Environment environment = new Environment( new File( dir ), environmentConfig );
+            environmentConfig.setTransactional( false );
+            DatabaseConfig databaseConfig = new DatabaseConfig();
+            databaseConfig.setAllowCreate( true );
+            // perform other database configurations
+            Database db = environment.openDatabase( null, key.toString(), databaseConfig );
+            return db;
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+
+    public Map<IndexIdentifier, Map<String, Database>> getDatabases() {
+        return databases;
+
+    }
 }
