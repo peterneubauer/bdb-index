@@ -19,6 +19,12 @@
  */
 package org.neo4j.index.bdbje;
 
+import com.sleepycat.je.*;
+import org.neo4j.helpers.Pair;
+import org.neo4j.kernel.impl.index.IndexProviderStore;
+import org.neo4j.kernel.impl.index.IndexStore;
+import org.neo4j.kernel.impl.transaction.xaframework.*;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -26,27 +32,6 @@ import java.nio.channels.ReadableByteChannel;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import org.neo4j.helpers.Pair;
-import org.neo4j.kernel.impl.index.IndexProviderStore;
-import org.neo4j.kernel.impl.index.IndexStore;
-import org.neo4j.kernel.impl.transaction.xaframework.LogBackedXaDataSource;
-import org.neo4j.kernel.impl.transaction.xaframework.XaCommand;
-import org.neo4j.kernel.impl.transaction.xaframework.XaCommandFactory;
-import org.neo4j.kernel.impl.transaction.xaframework.XaConnection;
-import org.neo4j.kernel.impl.transaction.xaframework.XaContainer;
-import org.neo4j.kernel.impl.transaction.xaframework.XaDataSource;
-import org.neo4j.kernel.impl.transaction.xaframework.XaLogicalLog;
-import org.neo4j.kernel.impl.transaction.xaframework.XaTransaction;
-import org.neo4j.kernel.impl.transaction.xaframework.XaTransactionFactory;
-
-import com.sleepycat.je.Database;
-import com.sleepycat.je.DatabaseConfig;
-import com.sleepycat.je.DatabaseEntry;
-import com.sleepycat.je.DatabaseException;
-import com.sleepycat.je.Environment;
-import com.sleepycat.je.EnvironmentConfig;
-import com.sleepycat.je.LockMode;
 
 
 
@@ -253,6 +238,10 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource {
 
 
     public static byte[] indexKey( String key, Object value ) {
+        if (value instanceof byte[])
+            return (byte[]) value;
+        if (value instanceof String)
+            return ((String) value).getBytes();
         return String.valueOf( "" + value ).getBytes();
     }
 
@@ -273,7 +262,7 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource {
     }
 
 
-    public void addEntry( Database db, IndexIdentifier identifier, long[] entityIds, String key, String value ) {
+    public void addEntry( Database db, IndexIdentifier identifier, long[] entityIds, String key, Object value ) {
         byte[] indexKey = indexKey( key, value );
         long[] existingIds = getExistingIds( db, indexKey );
         long[] ids = ArrayUtil.include( existingIds, entityIds );
@@ -297,7 +286,7 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource {
     }
 
 
-    public void removeEntry( Database db, IndexIdentifier identifier, long[] entityIds, String key, String value ) {
+    public void removeEntry( Database db, IndexIdentifier identifier, long[] entityIds, String key, Object value ) {
         byte[] indexKey = indexKey( key, value );
         long[] existingIds = getExistingIds( db, indexKey );
         long[] ids = ArrayUtil.exclude( existingIds, entityIds );

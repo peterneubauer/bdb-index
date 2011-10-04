@@ -19,11 +19,10 @@
  */
 package org.neo4j.index.bdbje;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
+import com.sleepycat.je.Database;
+import com.sleepycat.je.DatabaseEntry;
+import com.sleepycat.je.LockMode;
+import com.sleepycat.je.OperationStatus;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.graphdb.Relationship;
@@ -32,10 +31,10 @@ import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.helpers.collection.IteratorWrapper;
 import org.neo4j.kernel.impl.core.ReadOnlyDbException;
 
-import com.sleepycat.je.Database;
-import com.sleepycat.je.DatabaseEntry;
-import com.sleepycat.je.LockMode;
-import com.sleepycat.je.OperationStatus;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 
 
@@ -73,7 +72,7 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 		List<Long> ids = new ArrayList<Long>();
 		if ( entity instanceof Node ) {
 			ids.add( ( (Node)entity ).getId() );
-			service.dataSource().addEntry( db, identifier, ArrayUtil.toPrimitiveLongArray( ids ), key, value.toString() );
+			service.dataSource().addEntry( db, identifier, ArrayUtil.toPrimitiveLongArray( ids ), key, value );
 		}
 	}
 	
