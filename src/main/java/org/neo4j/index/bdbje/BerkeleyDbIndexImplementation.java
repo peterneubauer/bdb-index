@@ -19,12 +19,9 @@
  */
 package org.neo4j.index.bdbje;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexImplementation;
 import org.neo4j.graphdb.index.RelationshipIndex;
@@ -34,6 +31,10 @@ import org.neo4j.kernel.Config;
 import org.neo4j.kernel.KernelData;
 import org.neo4j.kernel.impl.index.IndexConnectionBroker;
 import org.neo4j.kernel.impl.index.ReadOnlyIndexConnectionBroker;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class BerkeleyDbIndexImplementation extends IndexImplementation
 {
@@ -46,7 +47,8 @@ public class BerkeleyDbIndexImplementation extends IndexImplementation
     private final IndexConnectionBroker<BerkeleyDbXaConnection> broker;
     private final BerkeleyDbDataSource dataSource;
 
-    private Map<String, BerkeleyDbIndex.NodeIndex> nodeIndicies = new HashMap();
+    private Map<String, BerkeleyDbIndex.NodeIndex> nodeIndicies = new HashMap<String, BerkeleyDbIndex.NodeIndex>();
+    private Map<String, BerkeleyDbIndex.RelationshipIndex> relationshipIndicies = new HashMap<String, BerkeleyDbIndex.RelationshipIndex>();
 
     public BerkeleyDbIndexImplementation( AbstractGraphDatabase db )
     {
@@ -101,10 +103,16 @@ public class BerkeleyDbIndexImplementation extends IndexImplementation
     }
 
     @Override
-    public RelationshipIndex relationshipIndex( String indexName, Map<String, String> config )
+    public RelationshipIndex relationshipIndex(String indexName, Map<String, String> config)
     {
-        // TODO Auto-generated method stub
-        return null;
+        BerkeleyDbIndex.RelationshipIndex result = relationshipIndicies.get(indexName);
+        if (null != result ) {
+
+        } else {
+            result = new BerkeleyDbIndex.RelationshipIndex( this, new IndexIdentifier( Relationship.class, indexName ) );
+            relationshipIndicies.put( indexName, result );
+        }
+        return result;
     }
 
     @Override

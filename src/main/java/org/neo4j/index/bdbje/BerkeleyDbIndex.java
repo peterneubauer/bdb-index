@@ -70,10 +70,8 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 		// directly commit stuff, no TX caching
 		Database db = service.dataSource().getDatabase( identifier, key );
 		List<Long> ids = new ArrayList<Long>();
-		if ( entity instanceof Node ) {
-			ids.add( ( (Node)entity ).getId() );
-			service.dataSource().addEntry( db, identifier, ArrayUtil.toPrimitiveLongArray( ids ), key, value );
-		}
+        ids.add(getEntityId(entity));
+        service.dataSource().addEntry( db, identifier, ArrayUtil.toPrimitiveLongArray( ids ), key, value );
 	}
 	
 	
@@ -119,7 +117,8 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 	
 	
 	protected abstract T idToEntity( Long id );
-	
+    protected abstract long getEntityId( T entity );
+
 	
 	@Override
 	public IndexHits<T> query( Object queryOrQueryObject ) {
@@ -151,7 +150,7 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 	
 	@Override
 	public void delete() {
-		System.err.println( "bdb index delete" );
+		System.err.println("bdb index delete");
 		for ( Map<String, Database> dbs : service.dataSource().getDatabases().values() ) {
 			for ( Database db : dbs.values() ) {
 				if ( db.getEnvironment().isValid() ) {
@@ -174,11 +173,16 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 		protected Node idToEntity( Long id ) {
 			return service.graphDb().getNodeById( id );
 		}
-		
-		
-		@Override
+
+        @Override
+        protected long getEntityId(Node entity) {
+            return entity.getId();
+        }
+
+
+        @Override
 		public String getName() {
-			return "bdb-relationships";
+			return "bdb-nodes";
 		}
 		
 		
@@ -209,9 +213,24 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 		}
 	}
 	
-	static class RelationshipIndex extends BerkeleyDbIndex<Relationship> {
-		
-		RelationshipIndex( BerkeleyDbIndexImplementation implementation, IndexIdentifier identifier ) {
+	static class RelationshipIndex extends BerkeleyDbIndex<Relationship> implements org.neo4j.graphdb.index.RelationshipIndex {
+
+        @Override
+        public IndexHits<Relationship> query(String s, Object o, Node start, Node end) {
+            return null;
+        }
+
+        @Override
+        public IndexHits<Relationship> query(Object o, Node start, Node end) {
+            return null;
+        }
+
+        @Override
+        public IndexHits<Relationship> get(String s, Object o, Node start, Node end) {
+            return null;
+        }
+
+        RelationshipIndex( BerkeleyDbIndexImplementation implementation, IndexIdentifier identifier ) {
 			super( implementation, identifier );
 		}
 		
@@ -220,9 +239,14 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 		protected Relationship idToEntity( Long id ) {
 			return service.graphDb().getRelationshipById( id );
 		}
-		
-		
-		@Override
+
+        @Override
+        protected long getEntityId(Relationship entity) {
+            return entity.getId();
+        }
+
+
+        @Override
 		public String getName() {
 			return "bdb-relationships";
 		}
