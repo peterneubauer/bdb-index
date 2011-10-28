@@ -65,7 +65,7 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 	
 	@Override
 	public void add( T entity, String key, Object value ) {
-		// getConnection().add( this, entity, key, value );
+		//getConnection().add( this, entity, key, value );
 		
 		// directly commit stuff, no TX caching
 		Database db = service.dataSource().getDatabase( identifier, key );
@@ -73,8 +73,7 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
         ids.add(getEntityId(entity));
         service.dataSource().addEntry( db, identifier, ArrayUtil.toPrimitiveLongArray( ids ), key, value );
 	}
-	
-	
+
 	@Override
 	public IndexHits<T> get( String key, Object value ) {
 		// BerkeleyDbXaConnection connection = getReadOnlyConnection();
@@ -132,16 +131,17 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 	}
 	
 	
-	public void remove( Object queryOrQueryObject ) {
-		throw new UnsupportedOperationException();
-	}
-	
-	
-	public void remove( T entity, Object queryOrQueryObjectOrNull ) {
-		throw new UnsupportedOperationException();
-	}
-	
-	
+    @Override
+    public void remove( T entity ) {
+        throw new UnsupportedOperationException();
+    }
+
+
+    @Override
+    public void remove( T arg0, String key ) {
+        throw new UnsupportedOperationException();
+    }
+
 	@Override
 	public void remove( T entity, String key, Object value ) {
 		getConnection().remove( this, entity, key, value );
@@ -161,6 +161,13 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 			}
 		}
 	}
+
+    @Override
+    public boolean isWriteable() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
 	
 	static class NodeIndex extends BerkeleyDbIndex<Node> {
 		
@@ -191,43 +198,23 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 			return Node.class;
 		}
 		
-		
-		@Override
-		public void remove( Node arg0 ) {
-			// TODO Auto-generated method stub
-			
-		}
-		
-		
-		@Override
-		public void remove( Node arg0, String arg1 ) {
-			// TODO Auto-generated method stub
-			
-		}
-		
-		
-		@Override
-		public boolean isWriteable() {
-			// TODO Auto-generated method stub
-			return false;
-		}
 	}
 	
 	static class RelationshipIndex extends BerkeleyDbIndex<Relationship> implements org.neo4j.graphdb.index.RelationshipIndex {
 
         @Override
         public IndexHits<Relationship> query(String s, Object o, Node start, Node end) {
-            return null;
+            throw new UnsupportedOperationException();
         }
 
         @Override
         public IndexHits<Relationship> query(Object o, Node start, Node end) {
-            return null;
+            throw new UnsupportedOperationException();
         }
 
         @Override
         public IndexHits<Relationship> get(String s, Object o, Node start, Node end) {
-            return null;
+            throw new UnsupportedOperationException();
         }
 
         RelationshipIndex( BerkeleyDbIndexImplementation implementation, IndexIdentifier identifier ) {
@@ -257,25 +244,6 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 			return Relationship.class;
 		}
 		
-		
-		@Override
-		public void remove( Relationship arg0 ) {
-			// TODO Auto-generated method stub
-			
-		}
-		
-		
-		@Override
-		public void remove( Relationship arg0, String arg1 ) {
-			// TODO Auto-generated method stub
-			
-		}
-		
-		
-		@Override
-		public boolean isWriteable() {
-			// TODO Auto-generated method stub
-			return false;
-		}
 	}
+
 }
