@@ -23,6 +23,8 @@ import com.sleepycat.je.Database;
 import com.sleepycat.je.DatabaseEntry;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
+import com.sleepycat.persist.EntityStore;
+
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.graphdb.Relationship;
@@ -39,39 +41,39 @@ import java.util.Map;
 
 
 public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements Index<T> {
-	
+
 	final BerkeleyDbIndexImplementation	service;
 	final IndexIdentifier				identifier;
-	
-	
+
+
 	BerkeleyDbIndex( BerkeleyDbIndexImplementation implementation, IndexIdentifier identifier ) {
 		this.service = implementation;
 		this.identifier = identifier;
 	}
-	
-	
+
+
 	BerkeleyDbXaConnection getConnection() {
 		if ( service.broker() == null ) {
 			throw new ReadOnlyDbException();
 		}
 		return service.broker().acquireResourceConnection();
 	}
-	
-	
+
+
 	BerkeleyDbXaConnection getReadOnlyConnection() {
 		return service.broker() == null ? null : service.broker().acquireReadOnlyResourceConnection();
 	}
-	
-	
+
+
 	@Override
 	public void add( T entity, String key, Object value ) {
 		//getConnection().add( this, entity, key, value );
-		
+
 		// directly commit stuff, no TX caching
 		Database db = service.dataSource().getDatabase( identifier, key );
 		List<Long> ids = new ArrayList<Long>();
-        ids.add(getEntityId(entity));
-        service.dataSource().addEntry( db, identifier, ArrayUtil.toPrimitiveLongArray( ids ), key, value );
+		ids.add(getEntityId(entity));
+		service.dataSource().addEntry( db, identifier, ArrayUtil.toPrimitiveLongArray( ids ), key, value );
 	}
 
 	@Override
@@ -86,12 +88,12 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 		Database db = service.dataSource().getDatabase( identifier, key );
 		List<Long> ids = new ArrayList<Long>();
 		try
-		
+
 		{
 			DatabaseEntry result = new DatabaseEntry();
 			OperationStatus status =
 					db.get( null, new DatabaseEntry( BerkeleyDbDataSource.indexKey( key, value ) ), result,
-						LockMode.READ_UNCOMMITTED );
+							LockMode.READ_UNCOMMITTED );
 			byte[] bytes = result.getData();
 			if ( bytes != null ) {
 				for ( long id : ArrayUtil.toLongArray( bytes ) ) {
@@ -103,9 +105,9 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 		} finally {
 			service.dataSource().releaseReadLock();
 		}
-		
+
 		Iterator<T> entities = new IteratorWrapper<T, Long>( ids.iterator() ) {
-			
+
 			@Override
 			protected T underlyingObjectToObject( Long id ) {
 				return idToEntity( id );
@@ -113,41 +115,41 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 		};
 		return new IndexHitsImpl<T>( entities, ids.size() );
 	}
-	
-	
-	protected abstract T idToEntity( Long id );
-    protected abstract long getEntityId( T entity );
 
-	
+
+	protected abstract T idToEntity( Long id );
+	protected abstract long getEntityId( T entity );
+
+
 	@Override
 	public IndexHits<T> query( Object queryOrQueryObject ) {
 		throw new UnsupportedOperationException();
 	}
-	
-	
+
+
 	@Override
 	public IndexHits<T> query( String key, Object queryOrQueryObject ) {
 		throw new UnsupportedOperationException();
 	}
-	
-	
-    @Override
-    public void remove( T entity ) {
-        throw new UnsupportedOperationException();
-    }
 
 
-    @Override
-    public void remove( T arg0, String key ) {
-        throw new UnsupportedOperationException();
-    }
+	@Override
+	public void remove( T entity ) {
+		throw new UnsupportedOperationException();
+	}
+
+
+	@Override
+	public void remove( T arg0, String key ) {
+		throw new UnsupportedOperationException();
+	}
 
 	@Override
 	public void remove( T entity, String key, Object value ) {
 		getConnection().remove( this, entity, key, value );
 	}
-	
-	
+
+
 	@Override
 	public void delete() {
 		System.err.println("bdb index delete");
@@ -160,90 +162,98 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 				}
 			}
 		}
+		for ( Map<String, EntityStore> strs : service.dataSource().getEntityStores().values() ) {
+			for ( EntityStore str : strs.values() ) {
+				if ( str.getEnvironment().isValid() ) {
+					System.err.println( "bdb environ closing:" + str.getEnvironment().getHome() );
+					str.close();
+					str.getEnvironment().close();
+				}
+			}
+		}
 	}
 
-    @Override
-    public boolean isWriteable() {
-        // TODO Auto-generated method stub
-        return false;
-    }
+	@Override
+	public boolean isWriteable() {
+		// TODO Auto-generated method stub
+		return false;
+	}
 
-	
+
 	static class NodeIndex extends BerkeleyDbIndex<Node> {
-		
+
 		NodeIndex( BerkeleyDbIndexImplementation implementation, IndexIdentifier identifier ) {
 			super( implementation, identifier );
 		}
-		
-		
+
+
 		@Override
 		protected Node idToEntity( Long id ) {
 			return service.graphDb().getNodeById( id );
 		}
 
-        @Override
-        protected long getEntityId(Node entity) {
-            return entity.getId();
-        }
+		@Override
+		protected long getEntityId(Node entity) {
+			return entity.getId();
+		}
 
 
-        @Override
+		@Override
 		public String getName() {
 			return "bdb-nodes";
 		}
-		
-		
+
+
 		@Override
 		public Class<Node> getEntityType() {
 			return Node.class;
 		}
-		
+
 	}
-	
+
 	static class RelationshipIndex extends BerkeleyDbIndex<Relationship> implements org.neo4j.graphdb.index.RelationshipIndex {
 
-        @Override
-        public IndexHits<Relationship> query(String s, Object o, Node start, Node end) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public IndexHits<Relationship> query(Object o, Node start, Node end) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public IndexHits<Relationship> get(String s, Object o, Node start, Node end) {
-            throw new UnsupportedOperationException();
-        }
-
-        RelationshipIndex( BerkeleyDbIndexImplementation implementation, IndexIdentifier identifier ) {
+		RelationshipIndex( BerkeleyDbIndexImplementation implementation, IndexIdentifier identifier ) {
 			super( implementation, identifier );
 		}
-		
-		
+
+		@Override
+		public IndexHits<Relationship> query(String s, Object o, Node start, Node end) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public IndexHits<Relationship> query(Object o, Node start, Node end) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public IndexHits<Relationship> get(String s, Object o, Node start, Node end) {
+			throw new UnsupportedOperationException();
+		}
+
 		@Override
 		protected Relationship idToEntity( Long id ) {
 			return service.graphDb().getRelationshipById( id );
 		}
 
-        @Override
-        protected long getEntityId(Relationship entity) {
-            return entity.getId();
-        }
+		@Override
+		protected long getEntityId(Relationship entity) {
+			return entity.getId();
+		}
 
 
-        @Override
+		@Override
 		public String getName() {
 			return "bdb-relationships";
 		}
-		
-		
+
+
 		@Override
 		public Class<Relationship> getEntityType() {
 			return Relationship.class;
 		}
-		
+
 	}
 
 }
