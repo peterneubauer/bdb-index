@@ -28,6 +28,7 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
+import org.neo4j.graphdb.index.RelationshipIndex;
 import org.neo4j.helpers.collection.MapUtil;
 
 
@@ -47,12 +48,12 @@ public class TestBerkeley extends Neo4jTestCase {
 		Node node1 = graphDb().createNode();
 		Node node2 = graphDb().createNode();
 		index.add( node1, "name", "Mattias" );
-		index.add( node1, "node_osm_id", 123 );
+		index.add( node1, "node_osm_id", Integer.valueOf(123) );
 		assertContains( index.get( "name", "Mattias" ), node1 );
-		assertContains( index.get( "node_osm_id", 123 ), node1 );
+		assertContains( index.get( "node_osm_id", Integer.valueOf(123) ), node1 );
 		restartTx();
 		assertContains( index.get( "name", "Mattias" ), node1 );
-		assertContains( index.get( "node_osm_id", 123 ), node1 );
+		assertContains( index.get( "node_osm_id", Integer.valueOf(123) ), node1 );
 		index.add( node2, "name", "Mattias" );
 		assertContains( index.get( "name", "Mattias" ), node1, node2 );
 		restartTx();
@@ -85,18 +86,21 @@ public class TestBerkeley extends Neo4jTestCase {
 		Node node2 = graphDb().createNode();
 		Relationship r1 = node1.createRelationshipTo(node2, rType);
 		index.add( r1, "name", "Mattias" );
-		index.add( r1, "node_osm_id", 123 );
+		index.add( r1, "r_osm_id", Integer.valueOf(123) );
 		assertContains( index.get( "name", "Mattias" ), r1 );
-		assertContains( index.get( "node_osm_id", 123 ), r1 );
+		assertContains( index.get( "r_osm_id", Integer.valueOf(123) ), r1 );
 		restartTx();
 		assertContains( index.get( "name", "Mattias" ), r1 );
-		assertContains( index.get( "node_osm_id", 123 ), r1 );
+		assertContains( index.get( "r_osm_id", Integer.valueOf(123) ), r1 );
 
 		Relationship r2 = node1.createRelationshipTo(node2, rType);
 		index.add( r2, "name", "Mattias" );
 		assertContains( index.get( "name", "Mattias" ), r1, r2 );
 		restartTx();
 		assertContains( index.get( "name", "Mattias" ), r1, r2 );
+
+		assertContains( index.get( "name", "Mattias" ), r1, r2 );
+
 
 		index.remove( r1, "name", "Mattias" );
 		// this should be better implemented
@@ -106,6 +110,53 @@ public class TestBerkeley extends Neo4jTestCase {
 		index.remove( r2, "name", "Mattias" );
 		assertContains( index.get( "name", "Mattias" ), r2 );
 		r2.delete();
+		r1.delete();
+		node1.delete();
+		node2.delete();
+
+		// success();
+		// } finally {
+		// finish();
+		// index.delete();
+		// }
+	}
+
+	@Test
+	public void testRelationshipQuery() throws Exception {
+		RelationshipIndex index = graphDb().index().forRelationships( "fastR", BerkeleyDbIndexImplementation.DEFAULT_CONFIG );
+		// try {
+		RelationshipType rType = new RelationshipTypeImpl("test");
+
+		Node node1 = graphDb().createNode();
+		Node node2 = graphDb().createNode();
+		Relationship r1 = node1.createRelationshipTo(node2, rType);
+		index.add( r1, "name", "Mattias" );
+		index.add( r1, "r_osm_id", Integer.valueOf(123) );
+		assertContains( index.query("name", "Mattias", node1, null), r1 );
+		assertContains( index.query("name", "Mattias", node1, node2), r1 );
+		assertContains( index.query("name", "Mattias", null, node2), r1 );
+		//		assertContains( index.get( "r_osm_id", Integer.valueOf(123) ), r1 );
+		//		restartTx();
+		//		assertContains( index.get( "name", "Mattias" ), r1 );
+		//		assertContains( index.get( "r_osm_id", Integer.valueOf(123) ), r1 );
+		//
+		//		Relationship r2 = node1.createRelationshipTo(node2, rType);
+		//		index.add( r2, "name", "Mattias" );
+		//		assertContains( index.get( "name", "Mattias" ), r1, r2 );
+		//		restartTx();
+		//		assertContains( index.get( "name", "Mattias" ), r1, r2 );
+		//
+		//		assertContains( index.get( "name", "Mattias" ), r1, r2 );
+		//
+		//
+		//		index.remove( r1, "name", "Mattias" );
+		//		// this should be better implemented
+		//		assertContains( index.get( "name", "Mattias" ), r1, r2 );
+		//		restartTx();
+		//		assertContains( index.get( "name", "Mattias" ), r2 );
+		//		index.remove( r2, "name", "Mattias" );
+		//		assertContains( index.get( "name", "Mattias" ), r2 );
+		//		r2.delete();
 		r1.delete();
 		node1.delete();
 		node2.delete();
