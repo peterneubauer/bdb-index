@@ -24,6 +24,8 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.helpers.collection.MapUtil;
@@ -31,16 +33,16 @@ import org.neo4j.helpers.collection.MapUtil;
 
 
 public class TestBerkeley extends Neo4jTestCase {
-	
+
 	// @Override
 	// protected boolean manageMyOwnTxFinish() {
 	// return true;
 	// }
-	
-	
+
+
 	@Test
-	public void testIt() throws Exception {
-		Index<Node> index = graphDb().index().forNodes( "fast", BerkeleyDbIndexImplementation.DEFAULT_CONFIG );
+	public void testNode() throws Exception {
+		Index<Node> index = graphDb().index().forNodes( "fastN", BerkeleyDbIndexImplementation.DEFAULT_CONFIG );
 		// try {
 		Node node1 = graphDb().createNode();
 		Node node2 = graphDb().createNode();
@@ -55,7 +57,7 @@ public class TestBerkeley extends Neo4jTestCase {
 		assertContains( index.get( "name", "Mattias" ), node1, node2 );
 		restartTx();
 		assertContains( index.get( "name", "Mattias" ), node1, node2 );
-		
+
 		index.remove( node1, "name", "Mattias" );
 		// this should be better implemented
 		assertContains( index.get( "name", "Mattias" ), node1, node2 );
@@ -65,15 +67,56 @@ public class TestBerkeley extends Neo4jTestCase {
 		assertContains( index.get( "name", "Mattias" ), node2 );
 		node1.delete();
 		node2.delete();
-		
+
 		// success();
 		// } finally {
 		// finish();
 		// index.delete();
 		// }
 	}
-	
-	
+
+	@Test
+	public void testRelationship() throws Exception {
+		Index<Relationship> index = graphDb().index().forRelationships( "fastR", BerkeleyDbIndexImplementation.DEFAULT_CONFIG );
+		// try {
+		RelationshipType rType = new RelationshipTypeImpl("test");
+
+		Node node1 = graphDb().createNode();
+		Node node2 = graphDb().createNode();
+		Relationship r1 = node1.createRelationshipTo(node2, rType);
+		index.add( r1, "name", "Mattias" );
+		index.add( r1, "node_osm_id", 123 );
+		assertContains( index.get( "name", "Mattias" ), r1 );
+		assertContains( index.get( "node_osm_id", 123 ), r1 );
+		restartTx();
+		assertContains( index.get( "name", "Mattias" ), r1 );
+		assertContains( index.get( "node_osm_id", 123 ), r1 );
+
+		Relationship r2 = node1.createRelationshipTo(node2, rType);
+		index.add( r2, "name", "Mattias" );
+		assertContains( index.get( "name", "Mattias" ), r1, r2 );
+		restartTx();
+		assertContains( index.get( "name", "Mattias" ), r1, r2 );
+
+		index.remove( r1, "name", "Mattias" );
+		// this should be better implemented
+		assertContains( index.get( "name", "Mattias" ), r1, r2 );
+		restartTx();
+		assertContains( index.get( "name", "Mattias" ), r2 );
+		index.remove( r2, "name", "Mattias" );
+		assertContains( index.get( "name", "Mattias" ), r2 );
+		r2.delete();
+		r1.delete();
+		node1.delete();
+		node2.delete();
+
+		// success();
+		// } finally {
+		// finish();
+		// index.delete();
+		// }
+	}
+
 	@Test
 	public void testInsertSome() {
 		Index<Node> index = graphDb().index().forNodes( "fast", MapUtil.stringMap( "provider", "berkeleydb-je" ) );
@@ -83,7 +126,7 @@ public class TestBerkeley extends Neo4jTestCase {
 			index.add( node, "yeah", "some long value " + ( i % 500 ) );
 		}
 		restartTx( true );
-		
+
 		for ( int i = 0; i < 500; i++ ) {
 			IndexHits<Node> hits = index.get( "yeah", "some long value " + i );
 			assertEquals( 20, hits.size() );
@@ -94,8 +137,8 @@ public class TestBerkeley extends Neo4jTestCase {
 		// index.delete();
 		// }
 	}
-	
-	
+
+
 	@Ignore
 	@Test
 	public void testInsertionSpeed() {
@@ -114,7 +157,7 @@ public class TestBerkeley extends Neo4jTestCase {
 			}
 		}
 		System.out.println( "insert:" + ( System.currentTimeMillis() - t ) );
-		
+
 		t = System.currentTimeMillis();
 		int count = 1000;
 		int resultCount = 0;
@@ -124,7 +167,7 @@ public class TestBerkeley extends Neo4jTestCase {
 			}
 		}
 		System.out.println( "get(" + resultCount + "):" + (double)( System.currentTimeMillis() - t ) / (double)count );
-		
+
 		t = System.currentTimeMillis();
 		resultCount = 0;
 		for ( int i = 0; i < count; i++ ) {
@@ -133,5 +176,19 @@ public class TestBerkeley extends Neo4jTestCase {
 			}
 		}
 		System.out.println( "get(" + resultCount + "):" + (double)( System.currentTimeMillis() - t ) / (double)count );
+	}
+
+	private static class RelationshipTypeImpl implements RelationshipType {
+
+		private final String name;
+
+		RelationshipTypeImpl( String name ) {
+			this.name = name;
+		}
+
+		@Override
+		public String name() {
+			return name;
+		}
 	}
 }
