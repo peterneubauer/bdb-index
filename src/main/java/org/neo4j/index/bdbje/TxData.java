@@ -28,82 +28,82 @@ import java.util.Set;
 
 class TxData
 {
-    private Map<String, Map<Object, Set<Long>>> data;
-    
-    void add( Long entityId, String key, Object value )
-    {
-        idCollection( key, value, true ).add( entityId );
-    }
-    
-    private Set<Long> idCollection( String key, Object value, boolean create )
-    {
-        Map<Object, Set<Long>> keyMap = keyMap( key, create );
-        if ( keyMap == null )
-        {
-            return null;
-        }
-        
-        Set<Long> ids = keyMap.get( value );
-        if ( ids == null && create )
-        {
-            ids = new HashSet<Long>();
-            keyMap.put( value, ids );
-        }
-        return ids;
-    }
+	private Map<String, Map<Object, Set<Long>>> data;
 
-    private Map<Object, Set<Long>> keyMap( String key, boolean create )
-    {
-        if ( data == null )
-        {
-            if ( create )
-            {
-                data = new HashMap<String, Map<Object,Set<Long>>>();
-            }
-            else
-            {
-                return null;
-            }
-        }
-        
-        Map<Object, Set<Long>> inner = data.get( key );
-        if ( inner == null && create )
-        {
-            inner = new HashMap<Object, Set<Long>>();
-            data.put( key, inner );
-        }
-        return inner;
-    }
+	void add( Long entityId, String key, Object value )
+	{
+		idCollection( key, value, true ).add( entityId );
+	}
 
-    void close()
-    {
-    }
+	private Set<Long> idCollection( String key, Object value, boolean create )
+	{
+		Map<Object, Set<Long>> keyMap = keyMap( key, create );
+		if ( keyMap == null )
+		{
+			return null;
+		}
 
-    void remove( Long entityId, String key, Object value )
-    {
-        if ( data == null )
-        {
-            return;
-        }
-        Collection<Long> ids = idCollection( key, value, false );
-        if ( ids != null )
-        {
-            ids.remove( entityId );
-        }
-    }
+		Set<Long> ids = keyMap.get( value );
+		if ( ids == null && create )
+		{
+			ids = new HashSet<Long>();
+			keyMap.put( value, ids );
+		}
+		return ids;
+	}
 
-    Set<Long> getEntityIds( String key, Object value )
-    {
-        Set<Long> ids = idCollection( key, value, false );
-        if ( ids == null )
-        {
-            return Collections.emptySet();
-        }
-        return ids;
-    }
-    
-    Map<String, Map<Object, Set<Long>>> rawMap()
-    {
-        return this.data;
-    }
+	private Map<Object, Set<Long>> keyMap( String key, boolean create )
+	{
+		if ( data == null )
+		{
+			if ( create )
+			{
+				data = new HashMap<String, Map<Object,Set<Long>>>();
+			}
+			else
+			{
+				return null;
+			}
+		}
+
+		Map<Object, Set<Long>> inner = data.get( key );
+		if ( inner == null && create )
+		{
+			inner = new HashMap<Object, Set<Long>>();
+			data.put( key, inner );
+		}
+		return inner;
+	}
+
+	void close()
+	{
+	}
+
+	void remove( Long entityId, String key, Object value )
+	{
+		if ( data == null )
+		{
+			return;
+		}
+		Collection<Long> ids = idCollection( key, value, false );
+		if ( ids != null )
+		{
+			ids.remove( entityId );
+		}
+	}
+
+	Set<Long> getEntityIds( String key, Object value )
+	{
+		Set<Long> ids = idCollection( key, value, false );
+		if ( ids == null )
+		{
+			return Collections.emptySet();
+		}
+		return ids;
+	}
+
+	Map<String, Map<Object, Set<Long>>> rawMap()
+	{
+		return data;
+	}
 }

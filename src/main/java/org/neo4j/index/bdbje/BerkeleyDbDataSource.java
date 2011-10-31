@@ -36,8 +36,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-
-
 /**
  * An {@link XaDataSource} optimized for the {@link LuceneIndexProvider}. This
  * class is public because the XA framework requires it.
