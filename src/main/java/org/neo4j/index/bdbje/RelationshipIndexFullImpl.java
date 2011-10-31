@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011 "Neo Technology,"
+ * Copyright (c) 2002-2011 "Neo Technology,"
  * Network Engine for Objects in Lund AB [http://neotechnology.com]
  *
  * This file is part of Neo4j.
@@ -27,7 +27,6 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.index.IndexHits;
 
 import com.sleepycat.persist.EntityCursor;
-import com.sleepycat.persist.EntityIndex;
 import com.sleepycat.persist.EntityStore;
 import com.sleepycat.persist.PrimaryIndex;
 import com.sleepycat.persist.SecondaryIndex;
