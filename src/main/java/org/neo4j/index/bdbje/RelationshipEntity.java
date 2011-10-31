@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2002-2011 "Neo Technology,"
+ * Copyright (c) 2011 "Neo Technology,"
  * Network Engine for Objects in Lund AB [http://neotechnology.com]
  *
  * This file is part of Neo4j.
@@ -25,7 +25,7 @@ import com.sleepycat.persist.model.Entity;
 import com.sleepycat.persist.model.PrimaryKey;
 import com.sleepycat.persist.model.SecondaryKey;
 
-import static com.sleepycat.persist.model.Relationship.MANY_TO_MANY;
+import static com.sleepycat.persist.model.Relationship.MANY_TO_ONE;
 
 /**
  * @author <a href="mailto:shabanovd@gmail.com">Dmitriy Shabanov</a>
@@ -35,31 +35,42 @@ import static com.sleepycat.persist.model.Relationship.MANY_TO_MANY;
 class RelationshipEntity {
 
 	@PrimaryKey
-	final long id;
+	long id;
 
-	@SecondaryKey(relate=MANY_TO_MANY)//,relatedEntity=Node.class
-	final long sNodeId;
+	@SecondaryKey(relate=MANY_TO_ONE)//,relatedEntity=Node.class
+	String key;
 
-	@SecondaryKey(relate=MANY_TO_MANY)//,relatedEntity=Node.class
-	final long eNodeId;
+	@SecondaryKey(relate=MANY_TO_ONE)//,relatedEntity=Node.class
+	String value;
 
-	RelationshipEntity(Relationship r) {
+	@SecondaryKey(relate=MANY_TO_ONE)//,relatedEntity=Node.class
+	long sNodeId;
+
+	@SecondaryKey(relate=MANY_TO_ONE)//,relatedEntity=Node.class
+	long eNodeId;
+
+	RelationshipEntity() {
+
+	}
+
+	RelationshipEntity(Relationship r, String k, String v) {
+
 		id = r.getId();
 		sNodeId = r.getStartNode().getId();
 		eNodeId = r.getEndNode().getId();
+
+		key = k;
+		value = v;
 	}
 
-	public static RelationshipEntity of(Relationship r) {
-		return new RelationshipEntity(r);
+	public static RelationshipEntity of(Relationship r, String k, String v) {
+		return new RelationshipEntity(r, k, v);
 	}
 
-	@Override
-	public boolean equals( Object obj ) {
-		return ((RelationshipEntity) obj).id == id;
-	}
-
-	@Override
-	public int hashCode() {
-		return (int) id;
-	}
+	//	@Override
+	//	public boolean equals( Object obj ) {
+	//		RelationshipEntity entity = (RelationshipEntity) obj;
+	//
+	//		return entity.id == id && entity.key == key && entity.value == value;
+	//	}
 }

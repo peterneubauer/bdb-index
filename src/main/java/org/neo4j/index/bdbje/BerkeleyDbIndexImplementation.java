@@ -38,100 +38,104 @@ import java.util.Map;
 
 public class BerkeleyDbIndexImplementation extends IndexImplementation
 {
-    static final String KEY_PROVIDER = "provider";
+	static final String KEY_PROVIDER = "provider";
 
-    public static final String SERVICE_NAME = "berkeleydb-je";
-    public static final Map<String, String> DEFAULT_CONFIG = Collections.unmodifiableMap( MapUtil.stringMap(
-            KEY_PROVIDER, SERVICE_NAME ) );
-    private final GraphDatabaseService graphDb;
-    private final IndexConnectionBroker<BerkeleyDbXaConnection> broker;
-    private final BerkeleyDbDataSource dataSource;
+	public static final String SERVICE_NAME = "berkeleydb-je";
+	public static final Map<String, String> DEFAULT_CONFIG = Collections.unmodifiableMap( MapUtil.stringMap(
+			KEY_PROVIDER, SERVICE_NAME ) );
+	private final GraphDatabaseService graphDb;
+	private final IndexConnectionBroker<BerkeleyDbXaConnection> broker;
+	private final BerkeleyDbDataSource dataSource;
 
-    private Map<String, BerkeleyDbIndex.NodeIndex> nodeIndicies = new HashMap<String, BerkeleyDbIndex.NodeIndex>();
-    private Map<String, BerkeleyDbIndex.RelationshipIndex> relationshipIndicies = new HashMap<String, BerkeleyDbIndex.RelationshipIndex>();
+	private final Map<String, BerkeleyDbIndex.NodeIndex> nodeIndicies = new HashMap<String, BerkeleyDbIndex.NodeIndex>();
+	private final Map<String, RelationshipIndex> relationshipIndicies = new HashMap<String, RelationshipIndex>();
 
-    public BerkeleyDbIndexImplementation( AbstractGraphDatabase db )
-    {
-        this( db, db.getConfig() );
-    }
+	public BerkeleyDbIndexImplementation( AbstractGraphDatabase db )
+	{
+		this( db, db.getConfig() );
+	}
 
-    BerkeleyDbIndexImplementation( KernelData kernel )
-    {
-        this( kernel.graphDatabase(), kernel.getConfig() );
-    }
+	BerkeleyDbIndexImplementation( KernelData kernel )
+	{
+		this( kernel.graphDatabase(), kernel.getConfig() );
+	}
 
-    private BerkeleyDbIndexImplementation( GraphDatabaseService graphdb, Config config )
-    {
-        this.graphDb = graphdb;
-        boolean isReadOnly = ( (AbstractGraphDatabase) graphDb ).isReadOnly();
-        Map<Object, Object> params = new HashMap<Object, Object>( config.getParams() );
-        params.put( "read_only", isReadOnly );
-        this.dataSource = (BerkeleyDbDataSource) config.getTxModule().registerDataSource(
-                BerkeleyDbDataSource.DEFAULT_NAME, BerkeleyDbDataSource.class.getName(),
-                BerkeleyDbDataSource.DEFAULT_BRANCH_ID, params, true );
-        this.broker = isReadOnly ? new ReadOnlyIndexConnectionBroker<BerkeleyDbXaConnection>(
-                config.getTxModule().getTxManager() ) : new ConnectionBroker( config.getTxModule().getTxManager(),
-                dataSource );
-    }
+	private BerkeleyDbIndexImplementation( GraphDatabaseService graphdb, Config config )
+	{
+		graphDb = graphdb;
+		boolean isReadOnly = ( (AbstractGraphDatabase) graphDb ).isReadOnly();
+		Map<Object, Object> params = new HashMap<Object, Object>( config.getParams() );
+		params.put( "read_only", isReadOnly );
+		dataSource = (BerkeleyDbDataSource) config.getTxModule().registerDataSource(
+				BerkeleyDbDataSource.DEFAULT_NAME, BerkeleyDbDataSource.class.getName(),
+				BerkeleyDbDataSource.DEFAULT_BRANCH_ID, params, true );
+		broker = isReadOnly ? new ReadOnlyIndexConnectionBroker<BerkeleyDbXaConnection>(
+				config.getTxModule().getTxManager() ) : new ConnectionBroker( config.getTxModule().getTxManager(),
+						dataSource );
+	}
 
-    IndexConnectionBroker<BerkeleyDbXaConnection> broker()
-    {
-        return this.broker;
-    }
+	IndexConnectionBroker<BerkeleyDbXaConnection> broker()
+	{
+		return broker;
+	}
 
-    GraphDatabaseService graphDb()
-    {
-        return this.graphDb;
-    }
+	GraphDatabaseService graphDb()
+	{
+		return graphDb;
+	}
 
-    BerkeleyDbDataSource dataSource()
-    {
-        return this.dataSource;
-    }
+	BerkeleyDbDataSource dataSource()
+	{
+		return dataSource;
+	}
 
-    @Override
-    public Index<Node> nodeIndex( String indexName, Map<String, String> config )
-    {
-        BerkeleyDbIndex.NodeIndex result = nodeIndicies.get(indexName);
-        if (null != result ) {
-            
-        } else {
-            result = new BerkeleyDbIndex.NodeIndex( this, new IndexIdentifier( Node.class, indexName ) );
-            nodeIndicies.put( indexName, result );
-        }
-        return result;
-    }
+	@Override
+	public Index<Node> nodeIndex( String indexName, Map<String, String> config )
+	{
+		BerkeleyDbIndex.NodeIndex result = nodeIndicies.get(indexName);
+		if (null != result ) {
 
-    @Override
-    public RelationshipIndex relationshipIndex(String indexName, Map<String, String> config)
-    {
-        BerkeleyDbIndex.RelationshipIndex result = relationshipIndicies.get(indexName);
-        if (null != result ) {
+		} else {
+			result = new BerkeleyDbIndex.NodeIndex( this, new IndexIdentifier( Node.class, indexName ) );
+			nodeIndicies.put( indexName, result );
+		}
+		return result;
+	}
 
-        } else {
-            result = new BerkeleyDbIndex.RelationshipIndex( this, new IndexIdentifier( Relationship.class, indexName ) );
-            relationshipIndicies.put( indexName, result );
-        }
-        return result;
-    }
+	@Override
+	public RelationshipIndex relationshipIndex(String indexName, Map<String, String> config)
+	{
+		RelationshipIndex result = relationshipIndicies.get(indexName);
+		if (result != null) {
+			return result;
+		}
 
-    @Override
-    public Map<String, String> fillInDefaults( Map<String, String> config )
-    {
-        return config;
-    }
+		if (config.get("FullIndex") != null && config.get("FullIndex").toLowerCase().equals("true")) {
+			result = new RelationshipIndexFullImpl( this, indexName );
+		} else {
+			result = new BerkeleyDbIndex.RelationshipIndex( this, new IndexIdentifier( Relationship.class, indexName ) );
+		}
+		relationshipIndicies.put( indexName, result );
+		return result;
+	}
 
-    @Override
-    public String getDataSourceName()
-    {
-        return BerkeleyDbDataSource.DEFAULT_NAME;
-    }
+	@Override
+	public Map<String, String> fillInDefaults( Map<String, String> config )
+	{
+		return config;
+	}
 
-    @Override
-    public boolean configMatches( Map<String, String> storedConfig, Map<String, String> config )
-    {
+	@Override
+	public String getDataSourceName()
+	{
+		return BerkeleyDbDataSource.DEFAULT_NAME;
+	}
 
-        String provider = "provider";
-        return storedConfig.get( provider ).equals( config.get( provider ) );
-    }
+	@Override
+	public boolean configMatches( Map<String, String> storedConfig, Map<String, String> config )
+	{
+
+		String provider = "provider";
+		return storedConfig.get( provider ).equals( config.get( provider ) );
+	}
 }
