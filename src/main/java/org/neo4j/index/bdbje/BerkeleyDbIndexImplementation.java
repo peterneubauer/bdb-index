@@ -63,7 +63,7 @@ public class BerkeleyDbIndexImplementation extends IndexImplementation
 	private BerkeleyDbIndexImplementation( GraphDatabaseService graphdb, Config config )
 	{
 		graphDb = graphdb;
-		boolean isReadOnly = ( (AbstractGraphDatabase) graphDb ).isReadOnly();
+		boolean isReadOnly = false;//XXX: ( (AbstractGraphDatabase) graphDb ).getConfig().isReadOnly();
 		Map<Object, Object> params = new HashMap<Object, Object>( config.getParams() );
 		params.put( "read_only", isReadOnly );
 		dataSource = (BerkeleyDbDataSource) config.getTxModule().registerDataSource(

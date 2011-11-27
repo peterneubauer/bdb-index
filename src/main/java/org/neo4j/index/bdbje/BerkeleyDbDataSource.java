@@ -24,6 +24,8 @@ import com.sleepycat.persist.EntityStore;
 import com.sleepycat.persist.StoreConfig;
 
 import org.neo4j.helpers.Pair;
+import org.neo4j.helpers.UTF8;
+import org.neo4j.kernel.CommonFactories;
 import org.neo4j.kernel.impl.index.IndexProviderStore;
 import org.neo4j.kernel.impl.index.IndexStore;
 import org.neo4j.kernel.impl.transaction.xaframework.*;
@@ -32,7 +34,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -43,7 +47,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class BerkeleyDbDataSource extends LogBackedXaDataSource {
 
 	public static final String									DEFAULT_NAME		= "bdb";
-	public static final byte[]									DEFAULT_BRANCH_ID	= "231564".getBytes();
+	public static final byte[]									DEFAULT_BRANCH_ID	= UTF8.encode( "231564" );
 
 	private final XaContainer									xaContainer;
 	private final String										baseStorePath;
@@ -81,7 +85,12 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource {
 		if ( !isReadOnly ) {
 			XaCommandFactory cf = new BerkeleyDbCommandFactory();
 			XaTransactionFactory tf = new BerkeleyDbTransactionFactory();
-			xaContainer = XaContainer.create( this, baseStorePath + "/logical.log", cf, tf, params );
+
+			List<Pair<TransactionInterceptorProvider, Object>> providers
+			= new ArrayList<Pair<TransactionInterceptorProvider, Object>>( 2 );
+
+			//XXX: replace null by providers
+			xaContainer = XaContainer.create( this, baseStorePath + "/logical.log", cf, tf, null, params );
 			try {
 				xaContainer.openLogicalLog();
 			} catch ( IOException e ) {
@@ -116,7 +125,7 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource {
 
 	static IndexProviderStore newIndexStore( String dbStoreDir ) {
 		// FIXME: is this really correct? doesn't seem safe...
-		return new IndexProviderStore( new File( dbStoreDir, "store.db" ) );
+		return new IndexProviderStore( new File( dbStoreDir, "store.db" ), CommonFactories.defaultFileSystemAbstraction() );
 	}
 
 
