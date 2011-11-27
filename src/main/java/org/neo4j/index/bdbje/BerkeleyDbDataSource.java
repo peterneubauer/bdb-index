@@ -41,7 +41,7 @@ import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
- * An {@link XaDataSource} optimized for the {@link LuceneIndexProvider}. This
+ * An {@link XaDataSource} optimized for the {@link BerkeleyDbIndexProvider}. This
  * class is public because the XA framework requires it.
  */
 public class BerkeleyDbDataSource extends LogBackedXaDataSource {
