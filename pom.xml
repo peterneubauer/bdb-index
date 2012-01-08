@@ -3,7 +3,7 @@
   <parent>
     <artifactId>parent-central</artifactId>
     <groupId>org.neo4j.build</groupId>
-    <version>25</version>
+    <version>26</version>
   </parent>
   <artifactId>neo4j-berkeleydb-je-index</artifactId>
   <version>0.2-SNAPSHOT</version>
