@@ -131,7 +131,7 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource {
 
 	@Override
 	public void close() {
-		System.err.println( "close of " + this.getClass() );
+		//System.err.println( "close of " + this.getClass() );
 		if ( closed ) {
 			return;
 		}
@@ -145,7 +145,7 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource {
 			for ( Map<String, Database> dbs : databases.values() ) {
 				for ( Database db : dbs.values() ) {
 					if ( db.getEnvironment().isValid() ) {
-						System.err.println( "bdb environ closing:" + db.getEnvironment().getHome() );
+						//System.err.println( "bdb environ closing:" + db.getEnvironment().getHome() );
 						db.close();
 						db.getEnvironment().close();
 					}
@@ -353,7 +353,7 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource {
 					BerkeleyDbDataSource.getStoreDir(
 							baseStorePath + "/index/bdb/" + identifier.itemClass.getSimpleName() + "/" + identifier.indexName + "/"
 									+ key ).first();
-			System.err.println( "bdb environ opening:" + dir );
+			//System.err.println( "bdb environ opening:" + dir );
 			Environment environment = new Environment( new File( dir ), environmentConfig );
 			environmentConfig.setTransactional( false );
 			DatabaseConfig databaseConfig = new DatabaseConfig();
