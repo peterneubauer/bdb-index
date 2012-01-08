@@ -22,6 +22,7 @@ package org.neo4j.index.bdbje;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.index.IndexHits;
@@ -41,6 +42,11 @@ public class RelationshipIndexFullImpl implements org.neo4j.graphdb.index.Relati
 		service = implementation;
 
 		identifier = new IndexIdentifier(Relationship.class, name);
+	}
+
+	@Override
+	public GraphDatabaseService getGraphDatabase() {
+		return service.graphDb();
 	}
 
 	@Override
@@ -95,6 +101,11 @@ public class RelationshipIndexFullImpl implements org.neo4j.graphdb.index.Relati
 				store.getSecondaryIndex(index, String.class, "value");
 
 		return new EntityIndexHits( sIndex.subIndex(value.toString()).entities() );
+	}
+
+	@Override
+	public Relationship putIfAbsent(Relationship entity, String key, Object value) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

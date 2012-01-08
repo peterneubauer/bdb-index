@@ -25,6 +25,7 @@ import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
 import com.sleepycat.persist.EntityStore;
 
+import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.graphdb.Relationship;
@@ -59,11 +60,15 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 		return service.broker().acquireResourceConnection();
 	}
 
-
 	BerkeleyDbXaConnection getReadOnlyConnection() {
 		return service.broker() == null ? null : service.broker().acquireReadOnlyResourceConnection();
 	}
 
+
+	@Override
+	public GraphDatabaseService getGraphDatabase() {
+		return service.graphDb();
+	}
 
 	@Override
 	public void add( T entity, String key, Object value ) {
@@ -116,10 +121,14 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 		return new IndexHitsImpl<T>( entities, ids.size() );
 	}
 
-
 	protected abstract T idToEntity( Long id );
 	protected abstract long getEntityId( T entity );
 
+
+	@Override
+	public T putIfAbsent(T entity, String key, Object value) {
+		throw new UnsupportedOperationException();
+	}
 
 	@Override
 	public IndexHits<T> query( Object queryOrQueryObject ) {
@@ -136,6 +145,12 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 	@Override
 	public void remove( T entity ) {
 		throw new UnsupportedOperationException();
+
+		//		for (Database db : service.dataSource().getDatabases().get(identifier).values()) {
+		//			List<Long> ids = new ArrayList<Long>();
+		//			ids.add(getEntityId(entity));
+		//			service.dataSource().addEntry( db, identifier, ArrayUtil.toPrimitiveLongArray( ids ), key, value );
+		//		}
 	}
 
 
