@@ -125,7 +125,7 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource {
 
 	static IndexProviderStore newIndexStore( String dbStoreDir ) {
 		// FIXME: is this really correct? doesn't seem safe...
-		return new IndexProviderStore( new File( dbStoreDir, "store.db" ), CommonFactories.defaultFileSystemAbstraction() );
+		return new IndexProviderStore( new File( dbStoreDir, "store.db" ), CommonFactories.defaultFileSystemAbstraction(), 1, true );
 	}
 
 
