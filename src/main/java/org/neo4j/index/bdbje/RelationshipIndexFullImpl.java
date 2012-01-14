@@ -44,10 +44,10 @@ public class RelationshipIndexFullImpl implements org.neo4j.graphdb.index.Relati
 		identifier = new IndexIdentifier(Relationship.class, name);
 	}
 
-	@Override
-	public GraphDatabaseService getGraphDatabase() {
-		return service.graphDb();
-	}
+	//	@Override
+	//	public GraphDatabaseService getGraphDatabase() {
+	//		return service.graphDb();
+	//	}
 
 	@Override
 	public IndexHits<Relationship> get(String key, Object valueOrNull,
@@ -103,10 +103,10 @@ public class RelationshipIndexFullImpl implements org.neo4j.graphdb.index.Relati
 		return new EntityIndexHits( sIndex.subIndex(value.toString()).entities() );
 	}
 
-	@Override
-	public Relationship putIfAbsent(Relationship entity, String key, Object value) {
-		throw new UnsupportedOperationException();
-	}
+	//	@Override
+	//	public Relationship putIfAbsent(Relationship entity, String key, Object value) {
+	//		throw new UnsupportedOperationException();
+	//	}
 
 	@Override
 	public IndexHits<Relationship> query(String key, Object queryOrQueryObject) {
