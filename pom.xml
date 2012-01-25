@@ -6,12 +6,12 @@
     <version>26</version>
   </parent>
   <artifactId>neo4j-berkeleydb-je-index</artifactId>
-  <version>0.2-SNAPSHOT</version>
+  <version>0.3-SNAPSHOT</version>
   <dependencies>
     <dependency>
       <groupId>org.neo4j</groupId>
       <artifactId>neo4j-kernel</artifactId>
-      <version>1.6.M02</version>
+      <version>1.6</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

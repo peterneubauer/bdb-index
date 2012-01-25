@@ -65,10 +65,10 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 	}
 
 
-	//	@Override
-	//	public GraphDatabaseService getGraphDatabase() {
-	//		return service.graphDb();
-	//	}
+	@Override
+	public GraphDatabaseService getGraphDatabase() {
+		return service.graphDb();
+	}
 
 	@Override
 	public void add( T entity, String key, Object value ) {
@@ -125,10 +125,10 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 	protected abstract long getEntityId( T entity );
 
 
-	//	@Override
-	//	public T putIfAbsent(T entity, String key, Object value) {
-	//		throw new UnsupportedOperationException();
-	//	}
+	@Override
+	public T putIfAbsent(T entity, String key, Object value) {
+		throw new UnsupportedOperationException();
+	}
 
 	@Override
 	public IndexHits<T> query( Object queryOrQueryObject ) {
