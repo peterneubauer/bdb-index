@@ -39,7 +39,7 @@ abstract class BerkeleyDbCommand extends XaCommand
 
     static final byte NODE = (byte) 1;
     static final byte RELATIONSHIP = (byte) 2;
-    
+
     final IndexIdentifier indexId;
     final long[] entityIds;
     final String key;
@@ -144,7 +144,7 @@ abstract class BerkeleyDbCommand extends XaCommand
         buffer.putInt( chars.length );
         buffer.put( chars );
     }
-    
+
     static XaCommand readCommand( ReadableByteChannel channel, ByteBuffer buffer,
             BerkeleyDbDataSource dataSource ) throws IOException
     {
@@ -198,13 +198,13 @@ abstract class BerkeleyDbCommand extends XaCommand
         {
             return null;
         }
-        
+
         Map<String, String> creationConfig = null;
         if ( commandType == CREATE_COMMAND )
         {
             creationConfig = IoPrimitiveUtils.readMap( channel, buffer );
         }
-        
+
         IndexIdentifier identifier = new IndexIdentifier( itemsClass, indexName );
         switch ( commandType )
         {

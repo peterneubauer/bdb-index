@@ -39,13 +39,13 @@ import org.neo4j.kernel.EmbeddedGraphDatabase;
 
 
 public abstract class Neo4jTestCase {
-	
+
 	private static File					basePath	= new File( "target/var" );
 	private static File					dbPath		= new File( basePath, "neo4j-db" );
 	private static GraphDatabaseService	graphDb		= null;
 	private Transaction					tx;
-	
-	
+
+
 	@BeforeClass
 	public static void setUpDb() throws Exception {
 		// System.err.println( "@BeforeClass" );
@@ -53,8 +53,8 @@ public abstract class Neo4jTestCase {
 		deleteFileOrDirectory( dbPath );
 		graphDb = new EmbeddedGraphDatabase( dbPath.getAbsolutePath() );
 	}
-	
-	
+
+
 	@AfterClass
 	public static void tearDownDb() throws Exception {
 		// System.err.println( "@AfterClass" );
@@ -62,15 +62,15 @@ public abstract class Neo4jTestCase {
 		graphDb = null;
 		deleteFileOrDirectory( dbPath );
 	}
-	
-	
+
+
 	@Before
 	public void setUpTest() {
 		// System.err.println( "@Before " + this.getClass() );
 		tx = graphDb.beginTx();
 	}
-	
-	
+
+
 	@After
 	public void tearDownTest() {
 		// System.err.println( "@After " + this.getClass() );
@@ -78,49 +78,49 @@ public abstract class Neo4jTestCase {
 			finishTx( true );
 		}
 	}
-	
-	
+
+
 	protected boolean manageMyOwnTxFinish() {
 		return false;
 	}
-	
-	
+
+
 	protected void finishTx( boolean commit ) {
 		if ( tx == null ) {
 			return;
 		}
-		
+
 		if ( commit ) {
 			tx.success();
 		}
 		tx.finish();
 		tx = null;
 	}
-	
-	
+
+
 	protected Transaction beginTx() {
 		if ( tx == null ) {
 			tx = graphDb.beginTx();
 		}
 		return tx;
 	}
-	
-	
+
+
 	protected File getBasePath() {
 		return basePath;
 	}
-	
-	
+
+
 	protected File getDbPath() {
 		return dbPath;
 	}
-	
-	
+
+
 	public static void deleteFileOrDirectory( File file ) {
 		if ( !file.exists() ) {
 			return;
 		}
-		
+
 		if ( file.isDirectory() ) {
 			for ( File child : file.listFiles() ) {
 				deleteFileOrDirectory( child );
@@ -132,13 +132,13 @@ public abstract class Neo4jTestCase {
 		assert ( ret ) || ( ( !ret ) && ( file.isDirectory() || file.getName().equals( "messages.log" ) ) ) : "failed to delete file: "
 		+ file.getAbsoluteFile();
 	}
-	
-	
+
+
 	protected void restartTx() {
 		restartTx( true );
 	}
-	
-	
+
+
 	protected void restartTx( boolean success ) {
 		if ( success ) {
 			tx.success();
@@ -148,13 +148,13 @@ public abstract class Neo4jTestCase {
 		tx.finish();
 		tx = graphDb.beginTx();
 	}
-	
-	
+
+
 	protected static GraphDatabaseService graphDb() {
 		return graphDb;
 	}
-	
-	
+
+
 	public static <T> void assertContains( Collection<T> collection, T... expectedItems ) {
 		String collectionString = join( ", ", collection.toArray() );
 		assertEquals( collectionString, expectedItems.length, collection.size() );
@@ -162,13 +162,13 @@ public abstract class Neo4jTestCase {
 			assertTrue( collection.contains( item ) );
 		}
 	}
-	
-	
+
+
 	public static <T> void assertContains( Iterable<T> items, T... expectedItems ) {
 		assertContains( asCollection( items ), expectedItems );
 	}
-	
-	
+
+
 	public static <T> void assertContainsInOrder( Collection<T> collection, T... expectedItems ) {
 		String collectionString = join( ", ", collection.toArray() );
 		assertEquals( collectionString, expectedItems.length, collection.size() );
@@ -177,13 +177,13 @@ public abstract class Neo4jTestCase {
 			assertEquals( expectedItems[i], itr.next() );
 		}
 	}
-	
-	
+
+
 	public static <T> void assertContainsInOrder( Iterable<T> collection, T... expectedItems ) {
 		assertContainsInOrder( asCollection( collection ), expectedItems );
 	}
-	
-	
+
+
 	public static <T> Collection<T> asCollection( Iterable<T> iterable ) {
 		List<T> list = new ArrayList<T>();
 		for ( T item : iterable ) {
@@ -191,8 +191,8 @@ public abstract class Neo4jTestCase {
 		}
 		return list;
 	}
-	
-	
+
+
 	public static <T> String join( String delimiter, T... items ) {
 		StringBuffer buffer = new StringBuffer();
 		for ( T item : items ) {
@@ -203,8 +203,8 @@ public abstract class Neo4jTestCase {
 		}
 		return buffer.toString();
 	}
-	
-	
+
+
 	protected <T> int countIterable( Iterable<T> iterable ) {
 		int counter = 0;
 		Iterator<T> itr = iterable.iterator();

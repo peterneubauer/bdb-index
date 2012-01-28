@@ -46,22 +46,22 @@ import com.sleepycat.je.OperationStatus;
 
 
 public class BerkeleyDbBatchInserterIndex implements BatchInserterIndex {
-	
+
 	// private final boolean createdNow;
 	// private Map<String, LruCache<String, Collection<Long>>> cache;
-	
+
 	private final Map<String, Database>	dbs	= new HashMap<String, Database>();
-	
+
 	private final Pair<String, Boolean>	storeDir;
-	
+
 	private final IndexIdentifier		identifier;
-	
-	
+
+
 	BerkeleyDbBatchInserterIndex( BerkeleyDbBatchInserterIndexProvider provider, BatchInserter inserter,
 		IndexIdentifier identifier, Map<String, String> config )
 		{
 		System.err.println( this.getClass() + " initing with id=" + identifier + " config=" + config.get( "provider" ) );
-		
+
 		this.identifier = identifier;
 		String dbStoreDir = ( (BatchInserterImpl)inserter ).getStore();
 		storeDir =
@@ -69,8 +69,8 @@ public class BerkeleyDbBatchInserterIndex implements BatchInserterIndex {
 						+ identifier.indexName );
 		// this.createdNow = storeDir.other();
 		}
-	
-	
+
+
 	@Override
 	public void add( long entityId, Map<String, Object> properties ) {
 		try {
@@ -88,15 +88,15 @@ public class BerkeleyDbBatchInserterIndex implements BatchInserterIndex {
 				dos.writeLong( entityId );
 				dos.flush();
 				db.put( null, valueEntry, new DatabaseEntry( baus.toByteArray() ) );
-				
+
 				dos.close();
 			}
 		} catch ( Exception e ) {
 			throw new RuntimeException( e );
 		}
 	}
-	
-	
+
+
 	public Database createDB( String key ) {
 		try {
 			EnvironmentConfig environmentConfig = new EnvironmentConfig();
@@ -116,9 +116,9 @@ public class BerkeleyDbBatchInserterIndex implements BatchInserterIndex {
 			throw new RuntimeException( e );
 		}
 	}
-	
-	
-	
+
+
+
 	@Override
 	public void updateOrAdd( long entityId, Map<String, Object> properties ) {
 		try {
@@ -127,9 +127,9 @@ public class BerkeleyDbBatchInserterIndex implements BatchInserterIndex {
 			throw new RuntimeException( e );
 		}
 	}
-	
-	
-	
+
+
+
 	@Override
 	public IndexHits<Long> get( String key, Object value ) {
 		ArrayList<Long> resultList = new ArrayList<Long>();
@@ -156,8 +156,8 @@ public class BerkeleyDbBatchInserterIndex implements BatchInserterIndex {
 		}
 		return new IndexHitsImpl<Long>( resultList, resultList.size() );
 	}
-	
-	
+
+
 	public void shutdown() {
 		System.err.println( "shutting down batch inserter index: " + identifier );
 		for ( Database db : dbs.values() ) {
@@ -168,32 +168,32 @@ public class BerkeleyDbBatchInserterIndex implements BatchInserterIndex {
 			}
 		}
 	}
-	
-	
+
+
 	@Override
 	public void flush() {
 		// writerModified = true;
 	}
-	
-	
+
+
 	@Override
 	public IndexHits<Long> query( String key, Object queryOrQueryObject ) {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
-	
+
+
 	@Override
 	public IndexHits<Long> query( Object queryOrQueryObject ) {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
-	
+
+
 	@Override
 	public void setCacheCapacity( String key, int size ) {
 		// TODO Auto-generated method stub
-		
+
 	}
-	
+
 }
