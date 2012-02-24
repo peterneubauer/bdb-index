@@ -199,6 +199,9 @@ public class TestBerkeley extends Neo4jTestCase {
 
 		assertContains( index.query("name", new Query("Mattias")), r2, r1);
 
+		index.remove( r1, "name", "Mattias" );
+		index.remove( r2, "name", "Mattias" );
+
 		r2.delete();
 		r1.delete();
 		node1.delete();
