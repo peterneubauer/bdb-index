@@ -138,7 +138,45 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 
 	@Override
 	public IndexHits<T> query( String key, Object queryOrQueryObject ) {
-		throw new UnsupportedOperationException();
+		Query query = (Query)queryOrQueryObject;
+
+		service.dataSource().getReadLock();
+		Database db = service.dataSource().getDatabase( identifier, key );
+
+		List<Long> ids = null;
+		try {
+			DatabaseEntry result = new DatabaseEntry();
+			OperationStatus status =
+					db.get( null, new DatabaseEntry( BerkeleyDbDataSource.indexKey( key, query._value ) ), result,
+							LockMode.READ_UNCOMMITTED );
+			byte[] bytes = result.getData();
+			if ( bytes != null ) {
+
+				long[] _ids_ = ArrayUtil.toLongArray( bytes );
+
+				ids = new ArrayList<Long>(_ids_.length);
+
+				for ( int i = _ids_.length - 1; i >= 0; i-- ) {
+					ids.add(_ids_[i]);
+				}
+			}
+		} catch ( Exception e ) {
+			throw new RuntimeException( e );
+		} finally {
+			service.dataSource().releaseReadLock();
+		}
+		if (ids == null) {
+			ids = new ArrayList<Long>();
+		}
+
+		Iterator<T> entities = new IteratorWrapper<T, Long>( ids.iterator() ) {
+
+			@Override
+			protected T underlyingObjectToObject( Long id ) {
+				return idToEntity( id );
+			}
+		};
+		return new IndexHitsImpl<T>( entities, ids.size() );
 	}
 
 

@@ -181,6 +181,31 @@ public class TestBerkeley extends Neo4jTestCase {
 	}
 
 	@Test
+	public void testQueryRelationship() throws Exception {
+		Index<Relationship> index = graphDb().index().forRelationships( "fastR", BerkeleyDbIndexImplementation.DEFAULT_CONFIG );
+
+		RelationshipType rType = new RelationshipTypeImpl("test");
+
+		Node node1 = graphDb().createNode();
+		Node node2 = graphDb().createNode();
+		Relationship r1 = node1.createRelationshipTo(node2, rType);
+		index.add( r1, "name", "Mattias" );
+
+		Relationship r2 = node1.createRelationshipTo(node2, rType);
+		index.add( r2, "name", "Mattias" );
+		restartTx();
+
+		assertContains( index.get( "name", "Mattias" ), r1, r2 );
+
+		assertContains( index.query("name", new Query("Mattias")), r2, r1);
+
+		r2.delete();
+		r1.delete();
+		node1.delete();
+		node2.delete();
+	}
+
+	@Test
 	public void testRelationshipQuery() throws Exception {
 		RelationshipIndex index = graphDb().index().forRelationships( "fastR", BerkeleyDbIndexImplementation.DEFAULT_CONFIG );
 		// try {
