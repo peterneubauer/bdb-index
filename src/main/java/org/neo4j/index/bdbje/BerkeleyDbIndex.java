@@ -31,7 +31,6 @@ import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
-import org.neo4j.helpers.collection.IteratorWrapper;
 import org.neo4j.kernel.impl.core.ReadOnlyDbException;
 
 import java.util.ArrayList;
@@ -39,8 +38,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-
-
 
 public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements Index<T> {
 
@@ -77,9 +74,10 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 
 		// directly commit stuff, no TX caching
 		Database db = service.dataSource().getDatabase( identifier, key );
-		List<Long> ids = new ArrayList<Long>();
-		ids.add(getEntityId(entity));
-		service.dataSource().addEntry( db, identifier, ArrayUtil.toPrimitiveLongArray( ids ), key, value );
+		//List<Long> ids = new ArrayList<Long>();
+		//ids.add(getEntityId(entity));
+		//service.dataSource().addEntry( db, identifier, ArrayUtil.toPrimitiveLongArray( ids ), key, value );
+		service.dataSource().addEntry( db, identifier, new long[] {getEntityId(entity)}, key, value );
 	}
 
 	@Override
@@ -103,13 +101,11 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 							LockMode.READ_UNCOMMITTED );
 
 			if (status != OperationStatus.SUCCESS) {
-				throw new RuntimeException("Data query got status " + status);
+				return NOTFOUND;
 			}
 
 			return new LightIndexHits(result.getData(), +1);
 
-		} catch ( RuntimeException e ) {
-			throw e;
 		} catch ( Exception e ) {
 			throw new RuntimeException( e );
 		} finally {
@@ -149,7 +145,7 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 								LockMode.READ_UNCOMMITTED );
 
 				if (status != OperationStatus.SUCCESS) {
-					throw new RuntimeException("Data query got status " + status);
+					return NOTFOUND;
 				}
 
 				return new LightIndexHits(result.getData(), -1);
@@ -361,4 +357,49 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 
 	}
 
+	NothingIndexHits NOTFOUND = new NothingIndexHits();
+
+	class NothingIndexHits implements IndexHits<T> {
+
+		@Override
+		public boolean hasNext() {
+			return false;
+		}
+
+		@Override
+		public T next() {
+			throw new NoSuchElementException();
+		}
+
+		@Override
+		public void remove() {
+			throw new NoSuchElementException();
+		}
+
+		@Override
+		public Iterator<T> iterator() {
+			return this;
+		}
+
+		@Override
+		public int size() {
+			return 0;
+		}
+
+		@Override
+		public void close() {
+			//nothing to do
+		}
+
+		@Override
+		public T getSingle() {
+			throw new NoSuchElementException();
+		}
+
+		@Override
+		public float currentScore() {
+			return 0;
+		}
+
+	}
 }

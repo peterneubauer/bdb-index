@@ -36,8 +36,6 @@ import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.graphdb.index.RelationshipIndex;
 import org.neo4j.helpers.collection.MapUtil;
 
-
-
 public class TestBerkeley extends Neo4jTestCase {
 
 	// @Override
@@ -276,7 +274,6 @@ public class TestBerkeley extends Neo4jTestCase {
 		// }
 	}
 
-
 	@Ignore
 	@Test
 	public void testInsertionSpeed() {
@@ -284,7 +281,7 @@ public class TestBerkeley extends Neo4jTestCase {
 		long t = System.currentTimeMillis();
 		for ( int i = 0; i < 1000000; i++ ) {
 			Node entity = graphDb().createNode();
-			index.get( "name", "The name " + i );
+			//index.get( "name", "The name " + i );
 			index.add( entity, "name", "The name " + i );
 			index.add( entity, "title", "Some title " + i );
 			index.add( entity, "something", i + "Nothing" );
@@ -300,33 +297,29 @@ public class TestBerkeley extends Neo4jTestCase {
 		int count = 1000;
 		int resultCount = 0;
 		for ( int i = 0; i < count; i++ ) {
-			for ( Node entity : index.get( "name", "The name " + i * 900 ) ) {
-				resultCount++;
-			}
+			resultCount += index.get( "name", "The name " + i * 900 ).size();
 		}
 		System.out.println( "get(" + resultCount + "):" + (double)( System.currentTimeMillis() - t ) / (double)count );
 
 		t = System.currentTimeMillis();
 		resultCount = 0;
 		for ( int i = 0; i < count; i++ ) {
-			for ( Node entity : index.get( "something", i * 900 + "Nothing" ) ) {
-				resultCount++;
-			}
+			resultCount += index.get( "something", i * 900 + "Nothing" ).size();
 		}
 		System.out.println( "get(" + resultCount + "):" + (double)( System.currentTimeMillis() - t ) / (double)count );
 	}
 
 	private static class RelationshipTypeImpl implements RelationshipType {
 
-		private final String name;
+		private final String _name;
 
 		RelationshipTypeImpl( String name ) {
-			this.name = name;
+			_name = name;
 		}
 
 		@Override
 		public String name() {
-			return name;
+			return _name;
 		}
 	}
 }
