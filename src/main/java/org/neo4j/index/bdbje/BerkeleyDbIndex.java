@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 
 
@@ -89,39 +90,34 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 		// Collections.<Long>emptyList();
 		// Collection<Long> removed = tx != null ? tx.getRemovedIds( this, key, value ) :
 		// Collections.<Long>emptyList();
+
 		service.dataSource().getReadLock();
 		Database db = service.dataSource().getDatabase( identifier, key );
-		List<Long> ids = new ArrayList<Long>();
-		try
 
-		{
+		try {
 			DatabaseEntry result = new DatabaseEntry();
 			OperationStatus status =
-					db.get( null, new DatabaseEntry( BerkeleyDbDataSource.indexKey( key, value ) ), result,
+					db.get( null,
+							new DatabaseEntry( BerkeleyDbDataSource.indexKey( key, value ) ),
+							result,
 							LockMode.READ_UNCOMMITTED );
-			byte[] bytes = result.getData();
-			if ( bytes != null ) {
-				for ( long id : ArrayUtil.toLongArray( bytes ) ) {
-					ids.add( id );
-				}
+
+			if (status != OperationStatus.SUCCESS) {
+				throw new RuntimeException("Data query got status " + status);
 			}
+
+			return new LightIndexHits(result.getData(), +1);
+
+		} catch ( RuntimeException e ) {
+			throw e;
 		} catch ( Exception e ) {
 			throw new RuntimeException( e );
 		} finally {
 			service.dataSource().releaseReadLock();
 		}
-
-		Iterator<T> entities = new IteratorWrapper<T, Long>( ids.iterator() ) {
-
-			@Override
-			protected T underlyingObjectToObject( Long id ) {
-				return idToEntity( id );
-			}
-		};
-		return new IndexHitsImpl<T>( entities, ids.size() );
 	}
 
-	protected abstract T idToEntity( Long id );
+	protected abstract T idToEntity( long id );
 	protected abstract long getEntityId( T entity );
 
 
@@ -138,45 +134,34 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 
 	@Override
 	public IndexHits<T> query( String key, Object queryOrQueryObject ) {
-		Query query = (Query)queryOrQueryObject;
+		if (queryOrQueryObject instanceof DecreaseOrderQuery) {
+			DecreaseOrderQuery query = (DecreaseOrderQuery)queryOrQueryObject;
 
-		service.dataSource().getReadLock();
-		Database db = service.dataSource().getDatabase( identifier, key );
+			service.dataSource().getReadLock();
+			Database db = service.dataSource().getDatabase( identifier, key );
 
-		List<Long> ids = null;
-		try {
-			DatabaseEntry result = new DatabaseEntry();
-			OperationStatus status =
-					db.get( null, new DatabaseEntry( BerkeleyDbDataSource.indexKey( key, query._value ) ), result,
-							LockMode.READ_UNCOMMITTED );
-			byte[] bytes = result.getData();
-			if ( bytes != null ) {
+			try {
+				DatabaseEntry result = new DatabaseEntry();
+				OperationStatus status =
+						db.get( null,
+								new DatabaseEntry( BerkeleyDbDataSource.indexKey( key, query._value ) ),
+								result,
+								LockMode.READ_UNCOMMITTED );
 
-				long[] _ids_ = ArrayUtil.toLongArray( bytes );
-
-				ids = new ArrayList<Long>(_ids_.length);
-
-				for ( int i = _ids_.length - 1; i >= 0; i-- ) {
-					ids.add(_ids_[i]);
+				if (status != OperationStatus.SUCCESS) {
+					throw new RuntimeException("Data query got status " + status);
 				}
-			}
-		} catch ( Exception e ) {
-			throw new RuntimeException( e );
-		} finally {
-			service.dataSource().releaseReadLock();
-		}
-		if (ids == null) {
-			ids = new ArrayList<Long>();
-		}
 
-		Iterator<T> entities = new IteratorWrapper<T, Long>( ids.iterator() ) {
-
-			@Override
-			protected T underlyingObjectToObject( Long id ) {
-				return idToEntity( id );
+				return new LightIndexHits(result.getData(), -1);
+			} catch ( RuntimeException e ) {
+				throw e;
+			} catch ( Exception e ) {
+				throw new RuntimeException( e );
+			} finally {
+				service.dataSource().releaseReadLock();
 			}
-		};
-		return new IndexHitsImpl<T>( entities, ids.size() );
+		}
+		throw new RuntimeException( "Unsuporded query "+queryOrQueryObject.getClass() );
 	}
 
 
@@ -193,7 +178,7 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 
 
 	@Override
-	public void remove( T arg0, String key ) {
+	public void remove( T entity, String key ) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -228,7 +213,6 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 
 	@Override
 	public boolean isWriteable() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
@@ -241,7 +225,7 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 
 
 		@Override
-		protected Node idToEntity( Long id ) {
+		protected Node idToEntity( long id ) {
 			return service.graphDb().getNodeById( id );
 		}
 
@@ -286,7 +270,7 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 		}
 
 		@Override
-		protected Relationship idToEntity( Long id ) {
+		protected Relationship idToEntity( long id ) {
 			return service.graphDb().getRelationshipById( id );
 		}
 
@@ -305,6 +289,74 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 		@Override
 		public Class<Relationship> getEntityType() {
 			return Relationship.class;
+		}
+
+	}
+
+	class LightIndexHits implements IndexHits<T> {
+
+		byte[] _array;
+		int length;
+		int pos = -1;
+		int v;
+
+		public LightIndexHits(byte[] array, int vector) {
+			_array = array;
+			v = vector;
+			length = _array.length/8;
+
+			if (v < 0) {
+				pos = length;
+			}
+		}
+
+		@Override
+		public boolean hasNext() {
+			if (v < 0) {
+				return pos > 0;
+			} else {
+				return pos < length - 1;
+			}
+		}
+
+		@Override
+		public T next() {
+			return idToEntity(
+					ArrayUtil.toLong( _array, (pos += v)*8 )
+					);
+		}
+
+		@Override
+		public void remove() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Iterator<T> iterator() {
+			return this;
+		}
+
+		@Override
+		public int size() {
+			return length;
+		}
+
+		@Override
+		public void close() {
+			//nothing to do
+		}
+
+		@Override
+		public T getSingle() {
+			if (length == 1 && pos == 0) {
+				return next();
+			}
+			throw new NoSuchElementException();
+		}
+
+		@Override
+		public float currentScore() {
+			return 0;
 		}
 
 	}

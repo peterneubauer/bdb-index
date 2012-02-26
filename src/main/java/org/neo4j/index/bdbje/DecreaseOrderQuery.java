@@ -23,11 +23,11 @@ package org.neo4j.index.bdbje;
  * @author <a href="mailto:shabanovd@gmail.com">Dmitriy Shabanov</a>
  *
  */
-public class Query {
+public class DecreaseOrderQuery {
 
 	Object _value;
 
-	public Query(Object value) {
+	public DecreaseOrderQuery(Object value) {
 		_value = value;
 	}
 
