@@ -93,9 +93,7 @@ public class BerkeleyDbIndexImplementation extends IndexImplementation
 	public Index<Node> nodeIndex( String indexName, Map<String, String> config )
 	{
 		BerkeleyDbIndex.NodeIndex result = nodeIndicies.get(indexName);
-		if (null != result ) {
-
-		} else {
+		if (null == result ) {
 			result = new BerkeleyDbIndex.NodeIndex( this, new IndexIdentifier( Node.class, indexName ) );
 			nodeIndicies.put( indexName, result );
 		}

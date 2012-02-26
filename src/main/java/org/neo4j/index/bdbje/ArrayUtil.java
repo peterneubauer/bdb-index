@@ -19,10 +19,10 @@
  */
 package org.neo4j.index.bdbje;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+
+import javolution.util.FastList;
+import javolution.util.FastSet;
 
 abstract class ArrayUtil
 {
@@ -71,52 +71,70 @@ abstract class ArrayUtil
 		return result;
 	}
 
-	public static long[] include( long[] existingIds, long[] entityIds )
-	{
-		Set<Long> added = new HashSet<Long>();
-		Collection<Long> ids = new ArrayList<Long>();
-		for ( Long id : existingIds )
-		{
-			if ( added.add( id ) )
-			{
-				ids.add( id );
+	@SuppressWarnings("boxing")
+	public static long[] include( long[] existingIds, long[] entityIds ) {
+		FastSet<Long> ids = FastSet.newInstance();
+		try {
+			for ( int i = 0; i < existingIds.length; i++ ) {
+				ids.add( existingIds[i] );
 			}
-		}
-		for ( Long id : entityIds )
-		{
-			if ( added.add( id ) )
-			{
-				ids.add( id );
+			for ( int i = 0; i < entityIds.length; i++ ) {
+				ids.add( entityIds[i] );
 			}
+			return ArrayUtil.toPrimitiveLongArray( ids );
+		} finally {
+			FastSet.recycle(ids);
 		}
-		return ArrayUtil.toPrimitiveLongArray( ids );
 	}
 
+	@SuppressWarnings("boxing")
 	public static long[] exclude( long[] existingIds, long[] entityIds )
 	{
-		Set<Long> entityIdsSet = new HashSet<Long>();
-		for ( Long id : entityIds )
-		{
-			entityIdsSet.add( id );
-		}
-		Collection<Long> ids = new ArrayList<Long>();
-		for ( long id : existingIds )
-		{
-			if ( !entityIdsSet.contains( id ) )
-			{
-				ids.add( id );
+		FastSet<Long> entityIdsSet = FastSet.newInstance();
+		try {
+			for ( int i = 0; i < entityIds.length; i++ ) {
+				entityIdsSet.add( entityIds[i] );
 			}
+
+			FastList<Long> ids = FastList.newInstance();
+			for ( long id : existingIds ) {
+				if ( !entityIdsSet.contains( id ) ) {
+					ids.add( id );
+				}
+			}
+			return toPrimitiveLongArray( ids );
+		} finally {
+			FastSet.recycle(entityIdsSet);
 		}
-		return toPrimitiveLongArray( ids );
 	}
 
+	@SuppressWarnings("boxing")
 	public static long[] toPrimitiveLongArray( Collection<Long> ids )
 	{
 		long[] result = new long[ids.size()];
 		int i = 0;
-		for ( Long id : ids )
-		{
+		for ( Long id : ids ) {
 			result[i++] = id;
+		}
+		return result;
+	}
+
+	@SuppressWarnings("boxing")
+	public static long[] toPrimitiveLongArray( FastSet<Long> ids ) {
+		long[] result = new long[ids.size()];
+		int i = 0;
+		for (FastSet.Record r = ids.head(), end = ids.tail(); (r = r.getNext()) != end;) {
+			result[i++] = ids.valueOf(r);
+		}
+		return result;
+	}
+
+	@SuppressWarnings("boxing")
+	public static long[] toPrimitiveLongArray( FastList<Long> ids ) {
+		long[] result = new long[ids.size()];
+		int i = 0;
+		for (FastList.Node<Long> n = ids.head(), end = ids.tail(); (n = n.getNext()) != end;) {
+			result[i++] = n.getValue();
 		}
 		return result;
 	}

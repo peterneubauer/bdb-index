@@ -6,7 +6,7 @@
     <version>26</version>
   </parent>
   <artifactId>neo4j-berkeleydb-je-index</artifactId>
-  <version>0.4-SNAPSHOT</version>
+  <version>0.5-SNAPSHOT</version>
   <dependencies>
     <dependency>
       <groupId>org.neo4j</groupId>
@@ -22,7 +22,12 @@
       <artifactId>je</artifactId>
       <version>4.1.10</version>
     </dependency>
-
+	<!-- fast map, list ... -->
+	<dependency>
+		<groupId>javolution</groupId>
+		<artifactId>javolution</artifactId>
+		<version>5.5.1</version>
+	</dependency>
   </dependencies>
 
   <build>

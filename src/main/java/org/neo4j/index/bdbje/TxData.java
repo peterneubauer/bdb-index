@@ -75,8 +75,8 @@ class TxData
 		return inner;
 	}
 
-	void close()
-	{
+	void close() {
+		//do nothing
 	}
 
 	void remove( Long entityId, String key, Object value )

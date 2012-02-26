@@ -30,10 +30,9 @@ import org.neo4j.graphdb.index.IndexHits;
  *
  * @param <T> the type of items.
  */
-public class IndexHitsImpl<SpatialDatabaseRecord> implements IndexHits<SpatialDatabaseRecord>
-{
-	private final Iterator<SpatialDatabaseRecord> hits;
-	private final int size;
+public class IndexHitsImpl<SpatialDatabaseRecord> implements IndexHits<SpatialDatabaseRecord> {
+	private final Iterator<SpatialDatabaseRecord> _hits;
+	private final int _size;
 
 	/**
 	 * Wraps an Iterable<T> with a known size.
@@ -41,8 +40,7 @@ public class IndexHitsImpl<SpatialDatabaseRecord> implements IndexHits<SpatialDa
 	 * @param hits the hits to iterate through.
 	 * @param size the size of the iteration.
 	 */
-	public IndexHitsImpl( Iterable<SpatialDatabaseRecord> hits, int size )
-	{
+	public IndexHitsImpl( Iterable<SpatialDatabaseRecord> hits, int size ) {
 		this( hits.iterator(), size );
 	}
 
@@ -52,63 +50,52 @@ public class IndexHitsImpl<SpatialDatabaseRecord> implements IndexHits<SpatialDa
 	 * @param hits the hits to iterate through.
 	 * @param size the size of the iteration.
 	 */
-	public IndexHitsImpl( Iterator<SpatialDatabaseRecord> hits, int size )
-	{
-		this.hits = hits;
-		this.size = size;
+	public IndexHitsImpl( Iterator<SpatialDatabaseRecord> hits, int size ) {
+		_hits = hits;
+		_size = size;
 	}
 
 	@Override
-	public Iterator<SpatialDatabaseRecord> iterator()
-	{
-		return this.hits;
+	public Iterator<SpatialDatabaseRecord> iterator() {
+		return _hits;
 	}
 
 	@Override
-	public int size()
-	{
-		return this.size;
+	public int size() {
+		return _size;
 	}
 
 	@Override
-	public void close()
-	{
+	public void close() {
 		// Do nothing
 	}
 
 	@Override
-	public boolean hasNext()
-	{
-		return this.hits.hasNext();
+	public boolean hasNext() {
+		return _hits.hasNext();
 	}
 
 	@Override
-	public SpatialDatabaseRecord next()
-	{
-		return this.hits.next();
+	public SpatialDatabaseRecord next() {
+		return _hits.next();
 	}
 
 	@Override
-	public void remove()
-	{
-		this.hits.remove();
+	public void remove() {
+		_hits.remove();
 	}
 
 	@Override
-	public SpatialDatabaseRecord getSingle()
-	{
-		SpatialDatabaseRecord result = this.hits.hasNext() ? this.hits.next() : null;
-		if ( this.hits.hasNext() )
-		{
+	public SpatialDatabaseRecord getSingle() {
+		SpatialDatabaseRecord result = _hits.hasNext() ? _hits.next() : null;
+		if ( _hits.hasNext() ) {
 			throw new NoSuchElementException();
 		}
 		return result;
 	}
 
 	@Override
-	public float currentScore()
-	{
-		// TODO Auto-generated method stub
+	public float currentScore() {
 		return 0;
 	}
 }

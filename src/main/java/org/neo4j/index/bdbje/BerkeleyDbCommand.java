@@ -33,189 +33,175 @@ import org.neo4j.kernel.impl.util.IoPrimitiveUtils;
 
 abstract class BerkeleyDbCommand extends XaCommand
 {
-    private static final byte ADD_COMMAND = (byte) 1;
-    private static final byte REMOVE_COMMAND = (byte) 2;
-    private static final byte CREATE_COMMAND = (byte) 3;
+	private static final byte ADD_COMMAND = (byte) 1;
+	private static final byte REMOVE_COMMAND = (byte) 2;
+	private static final byte CREATE_COMMAND = (byte) 3;
 
-    static final byte NODE = (byte) 1;
-    static final byte RELATIONSHIP = (byte) 2;
-    
-    final IndexIdentifier indexId;
-    final long[] entityIds;
-    final String key;
-    final String value;
-    final byte commandValue;
+	static final byte NODE = (byte) 1;
+	static final byte RELATIONSHIP = (byte) 2;
 
-    BerkeleyDbCommand( byte commandValue, IndexIdentifier indexId, long[] entityIds, String key,
-            String value )
-    {
-        this.commandValue = commandValue;
-        this.indexId = indexId;
-        this.entityIds = entityIds;
-        this.key = key;
-        this.value = value;
-    }
+	final IndexIdentifier _indexId;
+	final long[] _entityIds;
+	final String _key;
+	final String _value;
+	final byte _commandValue;
 
-    public byte getEntityType()
-    {
-        if ( indexId.itemClass == Node.class )
-        {
-            return NODE;
-        }
-        else if ( indexId.itemClass == Relationship.class )
-        {
-            return RELATIONSHIP;
-        }
-        throw new IllegalArgumentException( indexId.itemClass.toString() );
-    }
+	BerkeleyDbCommand( byte commandValue, IndexIdentifier indexId, long[] entityIds, String key, String value ) {
+		_commandValue = commandValue;
+		_indexId = indexId;
+		_entityIds = entityIds;
+		_key = key;
+		_value = value;
+	}
 
-    @Override
-    public void execute()
-    {
-        // TODO Auto-generated method stub
-    }
+	public byte getEntityType() {
+		if ( _indexId.itemClass == Node.class ) {
+			return NODE;
 
-    @Override
-    public void writeToFile( LogBuffer buffer ) throws IOException
-    {
-        buffer.put( commandValue );
-        buffer.put( getEntityType() );
-        char[] indexName = indexId.indexName.toCharArray();
-        buffer.putInt( indexName.length );
-        buffer.putInt( entityIds.length );
-        char[] key = this.key.toCharArray();
-        buffer.putInt( key.length );
-        char[] value = this.value.toCharArray();
-        buffer.putInt( value.length );
-        buffer.put( indexName );
-        for ( long id : entityIds )
-        {
-            buffer.putLong( id );
-        }
-        buffer.put( key );
-        buffer.put( value );
-    }
+		} else if ( _indexId.itemClass == Relationship.class ) {
+			return RELATIONSHIP;
+		}
+		throw new IllegalArgumentException( _indexId.itemClass.toString() );
+	}
 
-    static class AddCommand extends BerkeleyDbCommand
-    {
-        AddCommand( IndexIdentifier indexId, long[] entityIds, String key, String value )
-        {
-            super( ADD_COMMAND, indexId, entityIds, key, value );
-        }
-    }
+	@Override
+	public void execute() {
+		// TODO Auto-generated method stub
+	}
 
-    static class RemoveCommand extends BerkeleyDbCommand
-    {
-        RemoveCommand( IndexIdentifier indexId, long[] entityIds, String key, String value )
-        {
-            super( REMOVE_COMMAND, indexId, entityIds, key, value );
-        }
-    }
+	@Override
+	public void writeToFile( LogBuffer buffer ) throws IOException {
+		buffer.put( _commandValue );
+		buffer.put( getEntityType() );
 
-    static class CreateCommand extends BerkeleyDbCommand
-    {
-        // static final IndexIdentifier FAKE_IDENTIFIER = new IndexIdentifier(
-        // null, null );
-        static final long[] EMPTY_IDS = new long[0];
-        final Map<String, String> config;
+		char[] indexName = _indexId.indexName.toCharArray();
+		buffer.putInt( indexName.length );
+		buffer.putInt( _entityIds.length );
 
-        CreateCommand( IndexIdentifier identifier, Map<String, String> config )
-        {
-            super( CREATE_COMMAND, identifier, EMPTY_IDS, "", "" );
-            this.config = config;
-        }
+		char[] key = _key.toCharArray();
+		buffer.putInt( key.length );
+		char[] value = _value.toCharArray();
 
-        @Override
-        public void writeToFile( LogBuffer buffer ) throws IOException
-        {
-            super.writeToFile( buffer );
-            buffer.putInt( config.size() );
-            for ( Map.Entry<String, String> entry : config.entrySet() )
-            {
-                writeLengthAndString( buffer, entry.getKey() );
-                writeLengthAndString( buffer, entry.getValue() );
-            }
-        }
-    }
+		buffer.putInt( value.length );
+		buffer.put( indexName );
+		for ( long id : _entityIds ) {
+			buffer.putLong( id );
+		}
 
-    private static void writeLengthAndString( LogBuffer buffer, String string ) throws IOException
-    {
-        char[] chars = string.toCharArray();
-        buffer.putInt( chars.length );
-        buffer.put( chars );
-    }
-    
-    static XaCommand readCommand( ReadableByteChannel channel, ByteBuffer buffer,
-            BerkeleyDbDataSource dataSource ) throws IOException
-    {
-        buffer.clear();
-        buffer.limit( 18 );
-        if ( channel.read( buffer ) != buffer.limit() )
-        {
-            return null;
-        }
-        buffer.flip();
-        byte commandType = buffer.get();
-        byte cls = buffer.get();
-        Class<? extends PropertyContainer> itemsClass = null;
-        switch ( cls )
-        {
-        case NODE:
-            itemsClass = Node.class;
-            break;
-        case RELATIONSHIP:
-            itemsClass = Relationship.class;
-            break;
-        default:
-            return null;
-        }
+		buffer.put( key );
+		buffer.put( value );
+	}
 
-        int indexNameLength = buffer.getInt();
-        int numEntities = buffer.getInt();
-        int keyCharLength = buffer.getInt();
-        int valueCharLength = buffer.getInt();
+	static class AddCommand extends BerkeleyDbCommand {
+		AddCommand( IndexIdentifier indexId, long[] entityIds, String key, String value ) {
+			super( ADD_COMMAND, indexId, entityIds, key, value );
+		}
+	}
 
-        long[] entityIds = new long[numEntities];
-        for ( int i = 0; i < numEntities; i++ )
-        {
-            entityIds[i] = IoPrimitiveUtils.readLong( channel, buffer );
-        }
+	static class RemoveCommand extends BerkeleyDbCommand {
+		RemoveCommand( IndexIdentifier indexId, long[] entityIds, String key, String value ) {
+			super( REMOVE_COMMAND, indexId, entityIds, key, value );
+		}
+	}
 
-        String indexName = IoPrimitiveUtils.readString( channel, buffer, indexNameLength );
-        if ( indexName == null )
-        {
-            return null;
-        }
+	static class CreateCommand extends BerkeleyDbCommand {
+		// static final IndexIdentifier FAKE_IDENTIFIER = new IndexIdentifier( null, null );
 
-        String key = IoPrimitiveUtils.readString( channel, buffer, keyCharLength );
-        if ( key == null )
-        {
-            return null;
-        }
+		static final long[] EMPTY_IDS = new long[0];
+		final Map<String, String> _config;
 
-        String value = IoPrimitiveUtils.readString( channel, buffer, valueCharLength );
-        if ( value == null )
-        {
-            return null;
-        }
-        
-        Map<String, String> creationConfig = null;
-        if ( commandType == CREATE_COMMAND )
-        {
-            creationConfig = IoPrimitiveUtils.readMap( channel, buffer );
-        }
-        
-        IndexIdentifier identifier = new IndexIdentifier( itemsClass, indexName );
-        switch ( commandType )
-        {
-        case ADD_COMMAND:
-            return new AddCommand( identifier, entityIds, key, value );
-        case REMOVE_COMMAND:
-            return new RemoveCommand( identifier, entityIds, key, value );
-        case CREATE_COMMAND:
-            return new CreateCommand( identifier, creationConfig );
-        default:
-            return null;
-        }
-    }
+		CreateCommand( IndexIdentifier identifier, Map<String, String> config ) {
+			super( CREATE_COMMAND, identifier, EMPTY_IDS, "", "" );
+			_config = config;
+		}
+
+		@Override
+		public void writeToFile( LogBuffer buffer ) throws IOException {
+			super.writeToFile( buffer );
+			buffer.putInt( _config.size() );
+			for ( Map.Entry<String, String> entry : _config.entrySet() ) {
+				BerkeleyDbCommand.writeLengthAndString( buffer, entry.getKey() );
+				BerkeleyDbCommand.writeLengthAndString( buffer, entry.getValue() );
+			}
+		}
+	}
+
+	protected static void writeLengthAndString( LogBuffer buffer, String string ) throws IOException {
+		char[] chars = string.toCharArray();
+		buffer.putInt( chars.length );
+		buffer.put( chars );
+	}
+
+	static XaCommand readCommand(
+			ReadableByteChannel channel,
+			ByteBuffer buffer,
+			BerkeleyDbDataSource dataSource ) throws IOException {
+
+		buffer.clear();
+		buffer.limit( 18 );
+		if ( channel.read( buffer ) != buffer.limit() ) {
+			return null;
+		}
+		buffer.flip();
+		byte commandType = buffer.get();
+		byte cls = buffer.get();
+		Class<? extends PropertyContainer> itemsClass = null;
+		switch ( cls ) {
+		case NODE:
+			itemsClass = Node.class;
+			break;
+		case RELATIONSHIP:
+			itemsClass = Relationship.class;
+			break;
+		default:
+			return null;
+		}
+
+		int indexNameLength = buffer.getInt();
+		int numEntities = buffer.getInt();
+		int keyCharLength = buffer.getInt();
+		int valueCharLength = buffer.getInt();
+
+		long[] entityIds = new long[numEntities];
+		for ( int i = 0; i < numEntities; i++ ) {
+			entityIds[i] = IoPrimitiveUtils.readLong( channel, buffer );
+		}
+
+		String indexName = IoPrimitiveUtils.readString( channel, buffer, indexNameLength );
+		if ( indexName == null )
+		{
+			return null;
+		}
+
+		String key = IoPrimitiveUtils.readString( channel, buffer, keyCharLength );
+		if ( key == null )
+		{
+			return null;
+		}
+
+		String value = IoPrimitiveUtils.readString( channel, buffer, valueCharLength );
+		if ( value == null )
+		{
+			return null;
+		}
+
+		Map<String, String> creationConfig = null;
+		if ( commandType == CREATE_COMMAND )
+		{
+			creationConfig = IoPrimitiveUtils.readMap( channel, buffer );
+		}
+
+		IndexIdentifier identifier = new IndexIdentifier( itemsClass, indexName );
+		switch ( commandType )
+		{
+		case ADD_COMMAND:
+			return new AddCommand( identifier, entityIds, key, value );
+		case REMOVE_COMMAND:
+			return new RemoveCommand( identifier, entityIds, key, value );
+		case CREATE_COMMAND:
+			return new CreateCommand( identifier, creationConfig );
+		default:
+			return null;
+		}
+	}
 }
