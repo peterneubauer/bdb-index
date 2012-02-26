@@ -67,7 +67,7 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource {
 
 	/**
 	 * Constructs this data source.
-	 * 
+	 *
 	 * @param params
 	 *            XA parameters.
 	 * @throws InstantiationException

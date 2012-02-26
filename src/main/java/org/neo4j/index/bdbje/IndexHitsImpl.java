@@ -37,7 +37,7 @@ public class IndexHitsImpl<SpatialDatabaseRecord> implements IndexHits<SpatialDa
 
 	/**
 	 * Wraps an Iterable<T> with a known size.
-	 * 
+	 *
 	 * @param hits the hits to iterate through.
 	 * @param size the size of the iteration.
 	 */
@@ -48,7 +48,7 @@ public class IndexHitsImpl<SpatialDatabaseRecord> implements IndexHits<SpatialDa
 
 	/**
 	 * Wraps an Iterator<T> with a known size.
-	 * 
+	 *
 	 * @param hits the hits to iterate through.
 	 * @param size the size of the iteration.
 	 */

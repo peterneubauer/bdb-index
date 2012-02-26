@@ -41,27 +41,27 @@ import org.neo4j.kernel.impl.index.IndexStore;
  * are compatible with {@link Index}s from {@link LuceneIndexProvider}.
  */
 public class BerkeleyDbBatchInserterIndexProvider implements BatchInserterIndexProvider {
-	
+
 	private final BatchInserter											inserter;
 	private final Map<IndexIdentifier, BerkeleyDbBatchInserterIndex>	indexes	=
 			new HashMap<IndexIdentifier, BerkeleyDbBatchInserterIndex>();
 	final IndexStore													indexStore;
-	
-	
+
+
 	public BerkeleyDbBatchInserterIndexProvider( final BatchInserter inserter ) {
 		this.inserter = inserter;
 		indexStore = ( (BatchInserterImpl)inserter ).getIndexStore();
-		
+
 	}
-	
-	
+
+
 	@Override
 	public BatchInserterIndex nodeIndex( String indexName, Map<String, String> config ) {
 		config( Node.class, indexName, config );
 		return index( new IndexIdentifier( Node.class, indexName ), config );
 	}
-	
-	
+
+
 	private Map<String, String> config( Class<? extends PropertyContainer> cls, String indexName, Map<String, String> config ) {
 		// TODO Doesn't look right
 		if ( config != null ) {
@@ -74,15 +74,15 @@ public class BerkeleyDbBatchInserterIndexProvider implements BatchInserterIndexP
 			return indexStore.get( cls, indexName );
 		}
 	}
-	
-	
+
+
 	@Override
 	public BatchInserterIndex relationshipIndex( String indexName, Map<String, String> config ) {
 		config( Relationship.class, indexName, config );
 		return index( new IndexIdentifier( Relationship.class, indexName ), config );
 	}
-	
-	
+
+
 	private BatchInserterIndex index( IndexIdentifier identifier, Map<String, String> config ) {
 		// We don't care about threads here... c'mon... it's a
 		// single-threaded batch inserter
@@ -93,8 +93,8 @@ public class BerkeleyDbBatchInserterIndexProvider implements BatchInserterIndexP
 		}
 		return index;
 	}
-	
-	
+
+
 	@Override
 	public void shutdown() {
 		System.err.println( "org.neo4j.index.bdbje.BerkeleyDbBatchInserterIndexProvider.shutdown()" );

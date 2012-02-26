@@ -37,36 +37,36 @@ class BerkeleyDbXaConnection extends IndexXaConnection
 {
     private final BerkeleyDbXaResource xaResource;
 
-    BerkeleyDbXaConnection( Object identifier, XaResourceManager xaRm, 
+    BerkeleyDbXaConnection( Object identifier, XaResourceManager xaRm,
         byte[] branchId )
     {
         super( xaRm );
         xaResource = new BerkeleyDbXaResource( identifier, xaRm, branchId );
     }
-    
+
     @Override
     public XAResource getXaResource()
     {
         return xaResource;
     }
-    
+
     private static class BerkeleyDbXaResource extends XaResourceHelpImpl
     {
         private final Object identifier;
-        
-        BerkeleyDbXaResource( Object identifier, XaResourceManager xaRm, 
+
+        BerkeleyDbXaResource( Object identifier, XaResourceManager xaRm,
             byte[] branchId )
         {
             super( xaRm, branchId );
             this.identifier = identifier;
         }
-        
+
         @Override
         public boolean isSameRM( XAResource xares )
         {
             if ( xares instanceof BerkeleyDbXaResource )
             {
-                return identifier.equals( 
+                return identifier.equals(
                     ((BerkeleyDbXaResource) xares).identifier );
             }
             return false;
@@ -74,7 +74,7 @@ class BerkeleyDbXaConnection extends IndexXaConnection
     }
 
     private BerkeleydbTransaction tx;
-    
+
     BerkeleydbTransaction getTx()
     {
         if ( tx == null )
@@ -90,13 +90,13 @@ class BerkeleyDbXaConnection extends IndexXaConnection
         }
         return tx;
     }
-    
+
     <T extends PropertyContainer> void add( BerkeleyDbIndex<T> index,
             T entity, String key, Object value )
     {
         getTx().add( index, entity, key, value );
     }
-    
+
     <T extends PropertyContainer> void remove( BerkeleyDbIndex<T> index,
             T entity, String key, Object value )
     {

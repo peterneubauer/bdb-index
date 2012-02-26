@@ -25,13 +25,13 @@ class IndexIdentifier
 {
     final Class<? extends PropertyContainer> itemClass;
     final String indexName;
-    
+
     IndexIdentifier( Class<? extends PropertyContainer> cls, String name )
     {
         this.itemClass = cls;
         this.indexName = name;
     }
-    
+
     @Override
     public boolean equals( Object o )
     {
@@ -43,7 +43,7 @@ class IndexIdentifier
         return itemClass.equals( i.itemClass ) &&
                 indexName.equals( i.indexName );
     }
-    
+
     @Override
     public int hashCode()
     {

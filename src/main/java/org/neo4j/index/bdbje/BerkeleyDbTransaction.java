@@ -44,7 +44,7 @@ class BerkeleydbTransaction extends XaTransaction
             new HashMap<IndexIdentifier, TxDataBoth>();
     private final BerkeleyDbDataSource dataSource;
 
-    private final Map<IndexIdentifier,Collection<BerkeleyDbCommand>> commandMap = 
+    private final Map<IndexIdentifier,Collection<BerkeleyDbCommand>> commandMap =
             new HashMap<IndexIdentifier,Collection<BerkeleyDbCommand>>();
 
     BerkeleydbTransaction( int identifier, XaLogicalLog xaLog,
@@ -60,13 +60,13 @@ class BerkeleydbTransaction extends XaTransaction
         TxDataBoth data = getTxData( index, true );
         insert( index, entity, key, value, data.added( true ), data.removed( false ) );
     }
-    
+
     private long getEntityId( PropertyContainer entity )
     {
         return entity instanceof Node ? ((Node) entity).getId() :
                 ((Relationship) entity).getId();
     }
-    
+
     <T extends PropertyContainer> TxDataBoth getTxData( BerkeleyDbIndex<T> index,
             boolean createIfNotExists )
     {
@@ -86,7 +86,7 @@ class BerkeleydbTransaction extends XaTransaction
         TxDataBoth data = getTxData( index, true );
         insert( index, entity, key, value, data.removed( true ), data.added( false ) );
     }
-    
+
     private void queueCommand( BerkeleyDbCommand command )
     {
         IndexIdentifier indexId = command.indexId;
@@ -98,7 +98,7 @@ class BerkeleydbTransaction extends XaTransaction
         }
         commands.add( command );
     }
-    
+
     private <T extends PropertyContainer> void insert( BerkeleyDbIndex<T> index,
             T entity, String key, Object value, TxData insertInto, TxData removeFrom )
     {
@@ -121,7 +121,7 @@ class BerkeleydbTransaction extends XaTransaction
         Set<Long> ids = removed.getEntityIds( key, value );
         return ids != null ? ids : Collections.<Long>emptySet();
     }
-    
+
     <T extends PropertyContainer> Set<Long> getAddedIds( BerkeleyDbIndex<T> index,
             String key, Object value )
     {
@@ -133,7 +133,7 @@ class BerkeleydbTransaction extends XaTransaction
         Set<Long> ids = added.getEntityIds( key, value );
         return ids != null ? ids : Collections.<Long>emptySet();
     }
-    
+
     private <T extends PropertyContainer> TxData addedTxDataOrNull( BerkeleyDbIndex<T> index )
     {
         TxDataBoth data = getTxData( index, false );
@@ -143,7 +143,7 @@ class BerkeleydbTransaction extends XaTransaction
         }
         return data.added( false );
     }
-    
+
     private <T extends PropertyContainer> TxData removedTxDataOrNull( BerkeleyDbIndex<T> index )
     {
         TxDataBoth data = getTxData( index, false );
@@ -153,12 +153,12 @@ class BerkeleydbTransaction extends XaTransaction
         }
         return data.removed( false );
     }
-    
+
     @Override
     protected void doAddCommand( XaCommand command )
     { // we override inject command and manage our own in memory command list
     }
-    
+
     @Override
     protected void injectCommand( XaCommand command )
     {
@@ -184,7 +184,7 @@ class BerkeleydbTransaction extends XaTransaction
                                 ((CreateCommand) command).config );
                         continue;
                     }
-                    
+
                     long[] entityIds = command.entityIds;
                     String key = command.key;
                     String value = command.value;
@@ -253,7 +253,7 @@ class BerkeleydbTransaction extends XaTransaction
                 }
             }
         }
-        
+
         // TODO Fix duplicate code for-loop
         for ( TxDataBoth txData : this.txData.values() )
         {
@@ -296,7 +296,7 @@ class BerkeleydbTransaction extends XaTransaction
         }
         return true;
     }
-    
+
     // Bad name
     private class TxDataBoth
     {
@@ -304,13 +304,13 @@ class BerkeleydbTransaction extends XaTransaction
         private TxData remove;
         @SuppressWarnings("unchecked")
         private final BerkeleyDbIndex index;
-        
+
         @SuppressWarnings("unchecked")
         public TxDataBoth( BerkeleyDbIndex index )
         {
             this.index = index;
         }
-        
+
         TxData added( boolean createIfNotExists )
         {
             if ( this.add == null && createIfNotExists )
@@ -319,7 +319,7 @@ class BerkeleydbTransaction extends XaTransaction
             }
             return this.add;
         }
-        
+
         TxData removed( boolean createIfNotExists )
         {
             if ( this.remove == null && createIfNotExists )
@@ -328,7 +328,7 @@ class BerkeleydbTransaction extends XaTransaction
             }
             return this.remove;
         }
-        
+
         void close()
         {
             safeClose( add );

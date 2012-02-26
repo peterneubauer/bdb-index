@@ -35,16 +35,16 @@ import com.sleepycat.je.OperationStatus;
 
 
 public class RawBDBSpeed {
-	
+
 	private static final String	BDB		= "target/bdb";
 	private static final String	DB_NAME	= "testdb";
 	private static Database		bdb;
-	
-	
+
+
 	public static void main( String[] args ) throws Exception {
 		System.err.println("main in "+RawBDBSpeed.class);
 		File bdbDir = new File( BDB );
-		
+
 		deleteFileOrDirectory( bdbDir );
 		EnvironmentConfig environmentConfig = new EnvironmentConfig();
 		environmentConfig.setAllowCreate( true );
@@ -56,7 +56,7 @@ public class RawBDBSpeed {
 		databaseConfig.setAllowCreate( true );
 		// perform other database configurations
 		bdb = environment.openDatabase( null, DB_NAME, databaseConfig );
-		
+
 		long t = System.currentTimeMillis();
 		int max = 50000000;
 		for ( int i = 0; i < max; i++ ) {
@@ -73,7 +73,7 @@ public class RawBDBSpeed {
 			}
 		}
 		System.out.println( "insert time:" + ( System.currentTimeMillis() - t ) );
-		
+
 		t = System.currentTimeMillis();
 		for ( int i = 0; i < 1000; i++ ) {
 			DatabaseEntry theData = new DatabaseEntry();
@@ -88,11 +88,11 @@ public class RawBDBSpeed {
 			// fastToLong( array );
 		}
 		System.out.println( "1000 lookups:" + ( System.currentTimeMillis() - t ) );
-		
+
 		bdb.close();
 	}
-	
-	
+
+
 	private static byte[] fastToBytes( long value ) throws IOException {
 		byte[] array = new byte[8];
 		for ( int i = 0; i < 8; i++ ) {
@@ -100,8 +100,8 @@ public class RawBDBSpeed {
 		}
 		return array;
 	}
-	
-	
+
+
 	private static long fastToLong( byte[] array ) throws IOException {
 		long value = 0;
 		for ( int i = 0; i < array.length; i++ ) {
@@ -110,21 +110,21 @@ public class RawBDBSpeed {
 		}
 		return value;
 	}
-	
-	
+
+
 	private static byte[] lookupKey( String key, Object value ) {
 		return String.valueOf( key + "|" + value ).getBytes();
 	}
-	
-	
+
+
 	private static byte[] key( long id, String key, Object value ) {
 		return String.valueOf( key + "|" + value ).getBytes();
 	}
-	
-	
+
+
 	public static void deleteFileOrDirectory( File file ) {
 		if ( file.exists() ) {
-			
+
 			if ( file.isDirectory() ) {
 				for ( File child : file.listFiles() ) {
 					deleteFileOrDirectory( child );

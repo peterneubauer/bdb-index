@@ -49,28 +49,28 @@ import org.neo4j.kernel.impl.batchinsert.BatchInserterImpl;
 
 
 public class TestBerkeleyBatchInsert extends Neo4jTestCase {
-	
+
 	private static final String	PATH	= "target/var/batch";
 	private static final int	MAX		= 1000000;
 	private BatchInserter		inserter;
-	
-	
+
+
 	@Before
 	public void cleanDirectory() {
 		Neo4jTestCase.deleteFileOrDirectory( new File( PATH ) );
 		inserter = new BatchInserterImpl( PATH );
 	}
-	
-	
+
+
 	@After
 	public void tearDown() {
 		inserter.shutdown();
 	}
-	
-	
+
+
 	@Test
 	public void testSome() throws Exception {
-		
+
 		BatchInserterIndexProvider provider = new BerkeleyDbBatchInserterIndexProvider( inserter );
 		try {
 			BatchInserterIndex index = provider.nodeIndex( "users", BerkeleyDbIndexImplementation.DEFAULT_CONFIG );
@@ -83,7 +83,7 @@ public class TestBerkeleyBatchInsert extends Neo4jTestCase {
 				index.add( i, MapUtil.map( "name", "Joe" + i, "other", "Schmoe" ) );
 				// ids.put( i, id );
 			}
-			
+
 			for ( int i = 0; i < MAX; i++ ) {
 				if ( i % 100000 == 0 ) {
 					// restartTx();
@@ -96,7 +96,7 @@ public class TestBerkeleyBatchInsert extends Neo4jTestCase {
 			provider.shutdown();
 			inserter.shutdown();
 		}
-		
+
 		GraphDatabaseService db = new EmbeddedGraphDatabase( PATH );
 		try {
 			assertTrue( db.index().existsForNodes( "users" ) );
@@ -108,8 +108,8 @@ public class TestBerkeleyBatchInsert extends Neo4jTestCase {
 			db.shutdown();
 		}
 	}
-	
-	
+
+
 	// @Ignore
 	@Test
 	public void testInsertionSpeed() {
@@ -126,7 +126,7 @@ public class TestBerkeleyBatchInsert extends Neo4jTestCase {
 			}
 			System.out.println( "insert:" + ( System.currentTimeMillis() - t ) );
 			index.flush();
-			
+
 			t = System.currentTimeMillis();
 			for ( int i = 0; i < 1000000; i++ ) {
 				IteratorUtil.count( (Iterator<Long>)index.get( "key", "value" + i ) );
@@ -136,8 +136,8 @@ public class TestBerkeleyBatchInsert extends Neo4jTestCase {
 			provider.shutdown();
 		}
 	}
-	
-	
+
+
 	@Test
 	public void testFindCreatedIndex() {
 		String indexName = "persons";
@@ -167,8 +167,8 @@ public class TestBerkeleyBatchInsert extends Neo4jTestCase {
 			graphDb.shutdown();
 		}
 	}
-	
-	
+
+
 	@Ignore
 	@Test
 	public void testCanIndexRelationships() {
@@ -176,22 +176,22 @@ public class TestBerkeleyBatchInsert extends Neo4jTestCase {
 		BatchInserterIndexProvider indexProvider = new BerkeleyDbBatchInserterIndexProvider( inserter );
 		BatchInserterIndex edgesIndex =
 				indexProvider.relationshipIndex( "edgeIndex", MapUtil.stringMap( "provider", "lucene", "type", "exact" ) );
-		
+
 		long nodeId1 = inserter.createNode( MapUtil.map( "ID", "1" ) );
 		long nodeId2 = inserter.createNode( MapUtil.map( "ID", "2" ) );
 		long relationshipId = inserter.createRelationship( nodeId1, nodeId2, EdgeType.KNOWS, null );
-		
+
 		edgesIndex.add( relationshipId, MapUtil.map( "EDGE_TYPE", EdgeType.KNOWS.name() ) );
 		edgesIndex.flush();
-		
+
 		assertEquals( String.format( "Should return relationship id" ), new Long( relationshipId ),
 			edgesIndex.query( "EDGE_TYPE", EdgeType.KNOWS.name() ).getSingle() );
 		// FIXME: fails on above line
-		
+
 		indexProvider.shutdown();
 		inserter.shutdown();
 	}
-	
+
 	private enum EdgeType implements RelationshipType {
 		KNOWS
 	}
