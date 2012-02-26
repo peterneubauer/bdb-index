@@ -67,10 +67,8 @@ class BerkeleydbTransaction extends XaTransaction
 			((Relationship) entity).getId();
 	}
 
-	<T extends PropertyContainer> TxDataBoth getTxData( BerkeleyDbIndex<T> index,
-			boolean createIfNotExists )
-	{
-		IndexIdentifier identifier = index.identifier;
+	<T extends PropertyContainer> TxDataBoth getTxData( BerkeleyDbIndex<T> index, boolean createIfNotExists ) {
+		IndexIdentifier identifier = index._identifier;
 		TxDataBoth data = txData.get( identifier );
 		if ( data == null && createIfNotExists )
 		{
@@ -80,9 +78,7 @@ class BerkeleydbTransaction extends XaTransaction
 		return data;
 	}
 
-	<T extends PropertyContainer> void remove( BerkeleyDbIndex<T> index, T entity,
-			String key, Object value )
-	{
+	<T extends PropertyContainer> void remove( BerkeleyDbIndex<T> index, T entity, String key, Object value ) {
 		TxDataBoth data = getTxData( index, true );
 		insert( index, entity, key, value, data.removed( true ), data.added( false ) );
 	}
@@ -243,7 +239,7 @@ class BerkeleydbTransaction extends XaTransaction
 					String key = keyMap.getKey();
 					for ( Map.Entry<Object, Set<Long>> valueMap : keyMap.getValue().entrySet() )
 					{
-						AddCommand command = new AddCommand( _txData.index.identifier,
+						AddCommand command = new AddCommand( _txData.index._identifier,
 								ArrayUtil.toPrimitiveLongArray( valueMap.getValue() ), key,
 								valueMap.getKey().toString() );
 						addCommand( command );
@@ -264,7 +260,7 @@ class BerkeleydbTransaction extends XaTransaction
 					String key = keyMap.getKey();
 					for ( Map.Entry<Object, Set<Long>> valueMap : keyMap.getValue().entrySet() )
 					{
-						RemoveCommand command = new RemoveCommand( txData.index.identifier,
+						RemoveCommand command = new RemoveCommand( txData.index._identifier,
 								ArrayUtil.toPrimitiveLongArray( valueMap.getValue() ), key,
 								valueMap.getKey().toString() );
 						addCommand( command );

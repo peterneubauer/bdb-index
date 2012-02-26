@@ -39,31 +39,30 @@ import java.util.NoSuchElementException;
 
 public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements Index<T> {
 
-	final BerkeleyDbIndexImplementation	service;
-	final IndexIdentifier				identifier;
+	final BerkeleyDbIndexImplementation	_service;
+	final IndexIdentifier				_identifier;
 
 
 	BerkeleyDbIndex( BerkeleyDbIndexImplementation implementation, IndexIdentifier identifier ) {
-		this.service = implementation;
-		this.identifier = identifier;
+		_service = implementation;
+		_identifier = identifier;
 	}
 
 
 	BerkeleyDbXaConnection getConnection() {
-		if ( service.broker() == null ) {
+		if ( _service.broker() == null ) {
 			throw new ReadOnlyDbException();
 		}
-		return service.broker().acquireResourceConnection();
+		return _service.broker().acquireResourceConnection();
 	}
 
 	BerkeleyDbXaConnection getReadOnlyConnection() {
-		return service.broker() == null ? null : service.broker().acquireReadOnlyResourceConnection();
+		return _service.broker() == null ? null : _service.broker().acquireReadOnlyResourceConnection();
 	}
-
 
 	@Override
 	public GraphDatabaseService getGraphDatabase() {
-		return service.graphDb();
+		return _service.graphDb();
 	}
 
 	@Override
@@ -71,11 +70,11 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 		//getConnection().add( this, entity, key, value );
 
 		// directly commit stuff, no TX caching
-		Database db = service.dataSource().getDatabase( identifier, key );
+		Database db = _service.dataSource().getDatabase( _identifier, key );
 		//List<Long> ids = new ArrayList<Long>();
 		//ids.add(getEntityId(entity));
 		//service.dataSource().addEntry( db, identifier, ArrayUtil.toPrimitiveLongArray( ids ), key, value );
-		service.dataSource().addEntry( db, identifier, new long[] {getEntityId(entity)}, key, value );
+		_service.dataSource().addEntry( db, _identifier, new long[] {getEntityId(entity)}, key, value );
 	}
 
 	@Override
@@ -87,8 +86,8 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 		// Collection<Long> removed = tx != null ? tx.getRemovedIds( this, key, value ) :
 		// Collections.<Long>emptyList();
 
-		service.dataSource().getReadLock();
-		Database db = service.dataSource().getDatabase( identifier, key );
+		_service.dataSource().getReadLock();
+		Database db = _service.dataSource().getDatabase( _identifier, key );
 
 		try {
 			DatabaseEntry result = new DatabaseEntry();
@@ -107,7 +106,7 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 		} catch ( Exception e ) {
 			throw new RuntimeException( e );
 		} finally {
-			service.dataSource().releaseReadLock();
+			_service.dataSource().releaseReadLock();
 		}
 	}
 
@@ -131,8 +130,8 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 		if (queryOrQueryObject instanceof DecreaseOrderQuery) {
 			DecreaseOrderQuery query = (DecreaseOrderQuery)queryOrQueryObject;
 
-			service.dataSource().getReadLock();
-			Database db = service.dataSource().getDatabase( identifier, key );
+			_service.dataSource().getReadLock();
+			Database db = _service.dataSource().getDatabase( _identifier, key );
 
 			try {
 				DatabaseEntry result = new DatabaseEntry();
@@ -152,7 +151,7 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 			} catch ( Exception e ) {
 				throw new RuntimeException( e );
 			} finally {
-				service.dataSource().releaseReadLock();
+				_service.dataSource().releaseReadLock();
 			}
 		}
 		throw new RuntimeException( "Unsuporded query "+queryOrQueryObject.getClass() );
@@ -185,7 +184,7 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 	@Override
 	public void delete() {
 		System.err.println("bdb index delete");
-		for ( Map<String, Database> dbs : service.dataSource().getDatabases().values() ) {
+		for ( Map<String, Database> dbs : _service.dataSource().getDatabases().values() ) {
 			for ( Database db : dbs.values() ) {
 				if ( db.getEnvironment().isValid() ) {
 					System.err.println( "bdb environ closing:" + db.getEnvironment().getHome() );
@@ -194,7 +193,7 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 				}
 			}
 		}
-		for ( Map<String, EntityStore> strs : service.dataSource().getEntityStores().values() ) {
+		for ( Map<String, EntityStore> strs : _service.dataSource().getEntityStores().values() ) {
 			for ( EntityStore str : strs.values() ) {
 				if ( str.getEnvironment().isValid() ) {
 					System.err.println( "bdb environ closing:" + str.getEnvironment().getHome() );
@@ -220,7 +219,7 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 
 		@Override
 		protected Node idToEntity( long id ) {
-			return service.graphDb().getNodeById( id );
+			return _service.graphDb().getNodeById( id );
 		}
 
 		@Override
@@ -265,7 +264,7 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 
 		@Override
 		protected Relationship idToEntity( long id ) {
-			return service.graphDb().getRelationshipById( id );
+			return _service.graphDb().getRelationshipById( id );
 		}
 
 		@Override
@@ -342,7 +341,7 @@ public abstract class BerkeleyDbIndex<T extends PropertyContainer> implements In
 
 		@Override
 		public T getSingle() {
-			if (length == 1 && pos == 0) {
+			if (length == 1 && hasNext()) {
 				return next();
 			}
 			throw new NoSuchElementException();
