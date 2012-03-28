@@ -28,6 +28,7 @@ import org.neo4j.helpers.UTF8;
 import org.neo4j.kernel.CommonFactories;
 import org.neo4j.kernel.impl.index.IndexProviderStore;
 import org.neo4j.kernel.impl.index.IndexStore;
+import org.neo4j.kernel.impl.nioneo.store.FileSystemAbstraction;
 import org.neo4j.kernel.impl.transaction.xaframework.*;
 
 import java.io.File;
@@ -45,6 +46,15 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * class is public because the XA framework requires it.
  */
 public class BerkeleyDbDataSource extends LogBackedXaDataSource {
+
+	public interface Configuration extends LogBackedXaDataSource.Configuration {
+
+		boolean read_only(boolean def);
+
+		String store_dir();
+
+		boolean allow_store_upgrade( boolean def );
+	}
 
 	public static final String									DEFAULT_NAME		= "bdb";
 	public static final byte[]									DEFAULT_BRANCH_ID	= UTF8.encode( "231564" );
@@ -74,13 +84,15 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource {
 	 *             if the data source couldn't be
 	 *             instantiated
 	 */
-	public BerkeleyDbDataSource( Map<Object, Object> params ) throws InstantiationException {
-		super( params );
-		String storeDir = (String)params.get( "store_dir" );
+	public BerkeleyDbDataSource( Configuration config,  IndexStore indexStore, FileSystemAbstraction fileSystemAbstraction, XaFactory xaFactory) {
+		super( DEFAULT_BRANCH_ID,  DEFAULT_NAME);
+
+		String storeDir = config.store_dir();
 		baseStorePath = getStoreDir( storeDir ).first();
-		indexStore = (IndexStore)params.get( IndexStore.class );
+
+		this.indexStore = indexStore;
 		store = newIndexStore( storeDir );
-		isReadOnly = params.containsKey( "read_only" ) ? (Boolean)params.get( "read_only" ) : false;
+		isReadOnly = config.read_only( false );
 
 		if ( !isReadOnly ) {
 			XaCommandFactory cf = new BerkeleyDbCommandFactory();
@@ -89,17 +101,16 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource {
 			List<Pair<TransactionInterceptorProvider, Object>> providers
 			= new ArrayList<Pair<TransactionInterceptorProvider, Object>>( 2 );
 
-			//XXX: replace null by providers
-			xaContainer = XaContainer.create( this, baseStorePath + "/logical.log", cf, tf, null, params );
+			xaContainer = xaFactory.newXaContainer(this, baseStorePath + File.separator + "logical.log", cf, tf, null, null );
 			try {
 				xaContainer.openLogicalLog();
 			} catch ( IOException e ) {
 				throw new RuntimeException( "Unable to open bekeleydb log in " + baseStorePath, e );
 			}
 
-			Object keep = params.get( "keep_logical_logs" );
-			xaContainer.getLogicalLog().setKeepLogs( shouldKeepLog( keep!=null?(String)keep:"false", DEFAULT_NAME ) );
+			setKeepLogicalLogsIfSpecified( config.online_backup_enabled(false) ? "true" : config.keep_logical_logs(null), DEFAULT_NAME );
 			setLogicalLogAtCreationTime( xaContainer.getLogicalLog() );
+
 		} else {
 			xaContainer = null;
 		}

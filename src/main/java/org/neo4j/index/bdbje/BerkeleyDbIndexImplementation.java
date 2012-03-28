@@ -26,17 +26,13 @@ import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexImplementation;
 import org.neo4j.graphdb.index.RelationshipIndex;
 import org.neo4j.helpers.collection.MapUtil;
-import org.neo4j.kernel.AbstractGraphDatabase;
-import org.neo4j.kernel.Config;
-import org.neo4j.kernel.KernelData;
 import org.neo4j.kernel.impl.index.IndexConnectionBroker;
-import org.neo4j.kernel.impl.index.ReadOnlyIndexConnectionBroker;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public class BerkeleyDbIndexImplementation extends IndexImplementation
+public class BerkeleyDbIndexImplementation implements IndexImplementation
 {
 	static final String KEY_PROVIDER = "provider";
 
@@ -50,28 +46,14 @@ public class BerkeleyDbIndexImplementation extends IndexImplementation
 	private final Map<String, BerkeleyDbIndex.NodeIndex> nodeIndicies = new HashMap<String, BerkeleyDbIndex.NodeIndex>();
 	private final Map<String, RelationshipIndex> relationshipIndicies = new HashMap<String, RelationshipIndex>();
 
-	public BerkeleyDbIndexImplementation( AbstractGraphDatabase db )
+	public BerkeleyDbIndexImplementation( GraphDatabaseService db,
+			BerkeleyDbDataSource dataSource,
+			IndexConnectionBroker<BerkeleyDbXaConnection> broker
+			)
 	{
-		this( db, db.getConfig() );
-	}
-
-	BerkeleyDbIndexImplementation( KernelData kernel )
-	{
-		this( kernel.graphDatabase(), kernel.getConfig() );
-	}
-
-	private BerkeleyDbIndexImplementation( GraphDatabaseService graphdb, Config config )
-	{
-		graphDb = graphdb;
-		boolean isReadOnly = false;//XXX: ( (AbstractGraphDatabase) graphDb ).getConfig().isReadOnly();
-		Map<Object, Object> params = new HashMap<Object, Object>( config.getParams() );
-		params.put( "read_only", isReadOnly );
-		dataSource = (BerkeleyDbDataSource) config.getTxModule().registerDataSource(
-				BerkeleyDbDataSource.DEFAULT_NAME, BerkeleyDbDataSource.class.getName(),
-				BerkeleyDbDataSource.DEFAULT_BRANCH_ID, params, true );
-		broker = isReadOnly ? new ReadOnlyIndexConnectionBroker<BerkeleyDbXaConnection>(
-				config.getTxModule().getTxManager() ) : new ConnectionBroker( config.getTxModule().getTxManager(),
-						dataSource );
+		graphDb = db;
+		this.dataSource = dataSource;
+		this.broker = broker;
 	}
 
 	IndexConnectionBroker<BerkeleyDbXaConnection> broker()
