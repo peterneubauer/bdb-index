@@ -21,11 +21,12 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Maven: org.neo4j:neo4j-kernel:1.5-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: org.neo4j:neo4j-kernel:1.6" level="project" />
+    <orderEntry type="library" name="Maven: org.neo4j:neo4j-kernel:1.7-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.apache.geronimo.specs:geronimo-jta_1.1_spec:1.1.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.10" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest-core:1.1" level="project" />
     <orderEntry type="library" name="Maven: com.sleepycat:je:4.1.10" level="project" />
+    <orderEntry type="library" name="Maven: javolution:javolution:5.5.1" level="project" />
   </component>
 </module>
 
