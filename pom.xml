@@ -6,7 +6,7 @@
     <version>33</version>
   </parent>
   <artifactId>neo4j-berkeleydb-je-index</artifactId>
-  <version>0.5-SNAPSHOT</version>
+  <version>1.7-SNAPSHOT</version>
   <properties>
     <bundle.namespace>org.neo4j</bundle.namespace>
     <short-name>kernel</short-name>
