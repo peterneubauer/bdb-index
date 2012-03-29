@@ -9,11 +9,12 @@
   <artifactId>neo4j-berkeleydb-je-index</artifactId>
   <version>1.7.M02</version>
   <properties>
-    <!-- <bundle.namespace>org.neo4j</bundle.namespace> -->
-    <!-- <short-name>kernel</short-name> -->
+    <bundle.namespace>org.neo4j</bundle.namespace>
+    <short-name>bdb-index</short-name>
     <!-- <git.executable>git</git.executable> -->
     <license-text.header>GPL-3-header.txt</license-text.header>
     <!-- <docs.url>http://docs.neo4j.org/chunked/${project.version}/</docs.url> -->
+    <docs-plugin.filter>true</docs-plugin.filter>
     <docs-plugin.skip>true</docs-plugin.skip>
   </properties>
   <dependencies>
