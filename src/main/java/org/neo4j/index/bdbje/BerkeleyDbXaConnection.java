@@ -26,6 +26,7 @@ import javax.transaction.xa.XAResource;
 
 import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.kernel.impl.index.IndexXaConnection;
+import org.neo4j.kernel.impl.transaction.xaframework.XaConnectionHelpImpl;
 import org.neo4j.kernel.impl.transaction.xaframework.XaResourceHelpImpl;
 import org.neo4j.kernel.impl.transaction.xaframework.XaResourceManager;
 
@@ -33,80 +34,80 @@ import org.neo4j.kernel.impl.transaction.xaframework.XaResourceManager;
  * An XA connection used with {@link BerkeleyDbDataSource}.
  * This class is public because the XA framework requires it.
  */
-class BerkeleyDbXaConnection extends IndexXaConnection
+class BerkeleyDbXaConnection extends XaConnectionHelpImpl implements IndexXaConnection
 {
-    private final BerkeleyDbXaResource xaResource;
+	private final BerkeleyDbXaResource xaResource;
 
-    BerkeleyDbXaConnection( Object identifier, XaResourceManager xaRm, 
-        byte[] branchId )
-    {
-        super( xaRm );
-        xaResource = new BerkeleyDbXaResource( identifier, xaRm, branchId );
-    }
-    
-    @Override
-    public XAResource getXaResource()
-    {
-        return xaResource;
-    }
-    
-    private static class BerkeleyDbXaResource extends XaResourceHelpImpl
-    {
-        private final Object identifier;
-        
-        BerkeleyDbXaResource( Object identifier, XaResourceManager xaRm, 
-            byte[] branchId )
-        {
-            super( xaRm, branchId );
-            this.identifier = identifier;
-        }
-        
-        @Override
-        public boolean isSameRM( XAResource xares )
-        {
-            if ( xares instanceof BerkeleyDbXaResource )
-            {
-                return identifier.equals( 
-                    ((BerkeleyDbXaResource) xares).identifier );
-            }
-            return false;
-        }
-    }
+	BerkeleyDbXaConnection( Object identifier, XaResourceManager xaRm,
+			byte[] branchId )
+			{
+		super( xaRm );
+		xaResource = new BerkeleyDbXaResource( identifier, xaRm, branchId );
+			}
 
-    private BerkeleydbTransaction tx;
-    
-    BerkeleydbTransaction getTx()
-    {
-        if ( tx == null )
-        {
-            try
-            {
-                tx = ( BerkeleydbTransaction ) getTransaction();
-            }
-            catch ( XAException e )
-            {
-                throw new RuntimeException( "Unable to get lucene tx", e );
-            }
-        }
-        return tx;
-    }
-    
-    <T extends PropertyContainer> void add( BerkeleyDbIndex<T> index,
-            T entity, String key, Object value )
-    {
-        getTx().add( index, entity, key, value );
-    }
-    
-    <T extends PropertyContainer> void remove( BerkeleyDbIndex<T> index,
-            T entity, String key, Object value )
-    {
-        getTx().remove( index, entity, key, value );
-    }
+	@Override
+	public XAResource getXaResource()
+	{
+		return xaResource;
+	}
 
-    @Override
-    public void createIndex( Class<? extends PropertyContainer> entityType, String indexName,
-            Map<String, String> config )
-    {
-        getTx().create( entityType, indexName, config );
-    }
+	private static class BerkeleyDbXaResource extends XaResourceHelpImpl
+	{
+		private final Object identifier;
+
+		BerkeleyDbXaResource( Object identifier, XaResourceManager xaRm,
+				byte[] branchId )
+				{
+			super( xaRm, branchId );
+			this.identifier = identifier;
+				}
+
+		@Override
+		public boolean isSameRM( XAResource xares )
+		{
+			if ( xares instanceof BerkeleyDbXaResource )
+			{
+				return identifier.equals(
+						((BerkeleyDbXaResource) xares).identifier );
+			}
+			return false;
+		}
+	}
+
+	private BerkeleydbTransaction tx;
+
+	BerkeleydbTransaction getTx()
+	{
+		if ( tx == null )
+		{
+			try
+			{
+				tx = ( BerkeleydbTransaction ) getTransaction();
+			}
+			catch ( XAException e )
+			{
+				throw new RuntimeException( "Unable to get lucene tx", e );
+			}
+		}
+		return tx;
+	}
+
+	<T extends PropertyContainer> void add( BerkeleyDbIndex<T> index,
+			T entity, String key, Object value )
+	{
+		getTx().add( index, entity, key, value );
+	}
+
+	<T extends PropertyContainer> void remove( BerkeleyDbIndex<T> index,
+			T entity, String key, Object value )
+	{
+		getTx().remove( index, entity, key, value );
+	}
+
+	@Override
+	public void createIndex( Class<? extends PropertyContainer> entityType, String indexName,
+			Map<String, String> config )
+	{
+		getTx().create( entityType, indexName, config );
+	}
 }

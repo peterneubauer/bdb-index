@@ -23,12 +23,17 @@ import com.sleepycat.je.*;
 import com.sleepycat.persist.EntityStore;
 import com.sleepycat.persist.StoreConfig;
 
+import org.neo4j.graphdb.factory.GraphDatabaseSetting;
+import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.helpers.Pair;
 import org.neo4j.helpers.UTF8;
+import org.neo4j.kernel.AbstractGraphDatabase;
 import org.neo4j.kernel.CommonFactories;
+import org.neo4j.kernel.configuration.Config;
 import org.neo4j.kernel.impl.index.IndexProviderStore;
 import org.neo4j.kernel.impl.index.IndexStore;
 import org.neo4j.kernel.impl.nioneo.store.FileSystemAbstraction;
+import org.neo4j.kernel.impl.nioneo.xa.NeoStoreXaDataSource;
 import org.neo4j.kernel.impl.transaction.xaframework.*;
 
 import java.io.File;
@@ -47,13 +52,14 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class BerkeleyDbDataSource extends LogBackedXaDataSource {
 
-	public interface Configuration extends LogBackedXaDataSource.Configuration {
+	public static abstract class Configuration
+	extends LogBackedXaDataSource.Configuration
+	{
+		public static final GraphDatabaseSetting.BooleanSetting read_only = GraphDatabaseSettings.read_only;
+		public static final GraphDatabaseSetting.BooleanSetting online_backup_enabled = GraphDatabaseSettings.allow_store_upgrade;
 
-		boolean read_only(boolean def);
-
-		String store_dir();
-
-		boolean allow_store_upgrade( boolean def );
+		public static final GraphDatabaseSetting.BooleanSetting ephemeral = AbstractGraphDatabase.Configuration.ephemeral;
+		public static final GraphDatabaseSetting.StringSetting store_dir = NeoStoreXaDataSource.Configuration.store_dir;
 	}
 
 	public static final String									DEFAULT_NAME		= "bdb";
@@ -84,15 +90,15 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource {
 	 *             if the data source couldn't be
 	 *             instantiated
 	 */
-	public BerkeleyDbDataSource( Configuration config,  IndexStore indexStore, FileSystemAbstraction fileSystemAbstraction, XaFactory xaFactory) {
+	public BerkeleyDbDataSource( Config config,  IndexStore indexStore, FileSystemAbstraction fileSystemAbstraction, XaFactory xaFactory) {
 		super( DEFAULT_BRANCH_ID,  DEFAULT_NAME);
 
-		String storeDir = config.store_dir();
+		String storeDir = config.get( Configuration.store_dir );
 		baseStorePath = getStoreDir( storeDir ).first();
 
 		this.indexStore = indexStore;
 		store = newIndexStore( storeDir );
-		isReadOnly = config.read_only( false );
+		isReadOnly = config.getBoolean( Configuration.read_only );
 
 		if ( !isReadOnly ) {
 			XaCommandFactory cf = new BerkeleyDbCommandFactory();
@@ -108,13 +114,18 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource {
 				throw new RuntimeException( "Unable to open bekeleydb log in " + baseStorePath, e );
 			}
 
-			setKeepLogicalLogsIfSpecified( config.online_backup_enabled(false) ? "true" : config.keep_logical_logs(null), DEFAULT_NAME );
+			setKeepLogicalLogsIfSpecified( config.getBoolean( new GraphDatabaseSetting.BooleanSetting( "online_backup_enabled") ) ? "true" : config.get( Configuration.keep_logical_logs ), DEFAULT_NAME );
 			setLogicalLogAtCreationTime( xaContainer.getLogicalLog() );
 
 		} else {
 			xaContainer = null;
 		}
 
+	}
+
+	public boolean isReadOnly()
+	{
+		return isReadOnly;
 	}
 
 
