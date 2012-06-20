@@ -7,7 +7,7 @@
     <!-- <version>26</version> -->
   </parent>
   <artifactId>neo4j-berkeleydb-je-index</artifactId>
-  <version>1.8.M03</version>
+  <version>1.8.M04</version>
 
   <properties>
     <bundle.namespace>org.neo4j</bundle.namespace>
