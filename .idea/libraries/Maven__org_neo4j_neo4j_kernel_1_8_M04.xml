@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.neo4j:neo4j-kernel:1.8.M04">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/neo4j/neo4j-kernel/1.8.M04/neo4j-kernel-1.8.M04.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/neo4j/neo4j-kernel/1.8.M04/neo4j-kernel-1.8.M04-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/neo4j/neo4j-kernel/1.8.M04/neo4j-kernel-1.8.M04-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
