@@ -52,7 +52,7 @@ the relevant Commercial Agreement.
     <dependency>
       <groupId>com.sleepycat</groupId>
       <artifactId>je</artifactId>
-      <version>4.1.10</version>
+      <version>5.0.55</version>
     </dependency>
 	<!-- fast map, list ... -->
 	<dependency>
