@@ -58,7 +58,7 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource {
 		public static final GraphDatabaseSetting.BooleanSetting read_only = GraphDatabaseSettings.read_only;
 		public static final GraphDatabaseSetting.BooleanSetting online_backup_enabled = GraphDatabaseSettings.allow_store_upgrade;
 
-		public static final GraphDatabaseSetting.BooleanSetting ephemeral = AbstractGraphDatabase.Configuration.ephemeral;
+		//		public static final GraphDatabaseSetting.BooleanSetting ephemeral = AbstractGraphDatabase.Configuration.ephemeral;
 		public static final GraphDatabaseSetting.StringSetting store_dir = NeoStoreXaDataSource.Configuration.store_dir;
 	}
 
@@ -114,7 +114,7 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource {
 				throw new RuntimeException( "Unable to open bekeleydb log in " + baseStorePath, e );
 			}
 
-			setKeepLogicalLogsIfSpecified( config.getBoolean( new GraphDatabaseSetting.BooleanSetting( "online_backup_enabled") ) ? "true" : config.get( Configuration.keep_logical_logs ), DEFAULT_NAME );
+			//XXX: setKeepLogicalLogsIfSpecified( config.getBoolean( new GraphDatabaseSetting.BooleanSetting( "online_backup_enabled") ) ? "true" : config.get( Configuration.keep_logical_logs ), DEFAULT_NAME );
 			setLogicalLogAtCreationTime( xaContainer.getLogicalLog() );
 
 		} else {
