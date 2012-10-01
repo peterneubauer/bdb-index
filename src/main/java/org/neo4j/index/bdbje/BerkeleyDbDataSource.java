@@ -83,12 +83,6 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource {
 
 	/**
 	 * Constructs this data source.
-	 * 
-	 * @param params
-	 *            XA parameters.
-	 * @throws InstantiationException
-	 *             if the data source couldn't be
-	 *             instantiated
 	 */
 	public BerkeleyDbDataSource( Config config,  IndexStore indexStore, FileSystemAbstraction fileSystemAbstraction, XaFactory xaFactory) {
 		super( DEFAULT_BRANCH_ID,  DEFAULT_NAME);
@@ -224,8 +218,13 @@ public class BerkeleyDbDataSource extends LogBackedXaDataSource {
 			return store.incrementVersion();
 		}
 
+        @Override
+        public void setVersion(long version) {
+            //ToDo
+        }
 
-		@Override
+
+        @Override
 		public long getLastCommittedTx() {
 			return store.getLastCommittedTx();
 		}
