@@ -7,7 +7,7 @@
     <!-- <version>26</version> -->
   </parent>
   <artifactId>neo4j-berkeleydb-je-index</artifactId>
-  <version>1.8.RC1</version>
+  <version>1.8</version>
 
   <properties>
     <bundle.namespace>org.neo4j</bundle.namespace>
@@ -43,7 +43,7 @@ the relevant Commercial Agreement.
     <dependency>
       <groupId>org.neo4j</groupId>
       <artifactId>neo4j-kernel</artifactId>
-      <version>1.8.RC1</version>
+      <version>1.8</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
